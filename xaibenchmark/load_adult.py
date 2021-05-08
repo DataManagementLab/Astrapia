@@ -1,8 +1,9 @@
 import os
 import json
-from numpy.random import RandomState
 import pandas as pd
 from sklearn.utils import Bunch
+from numpy.random import RandomState
+
 
 def load_csv_data(dataset_name, root_path='data', seed=0):
     """
