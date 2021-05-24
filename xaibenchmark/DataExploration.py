@@ -18,7 +18,7 @@ def basic_information(bunch):
     print("The dataset consists of", len(bunch.feature_names), "features.\nThese are", ", ".join(bunch.feature_names))
 
 
-def feature_information(bunch, feature, dataset):
+def feature_information(bunch, feature, dataset="train"):
     """
     Prints information on the data specific to a feature of the dataset
     :param bunch: sk-learn Bunch created by load_adult.py
@@ -57,9 +57,10 @@ def feature_information(bunch, feature, dataset):
         max_val = data[feature].max()
         min_val = data[feature].min()
         mean_val = data[feature].mean()
+        std_val = data[feature].std()
         print(feature, "is a numerical feature. \nIts lowest value in the given dataset is", min_val)
         print("Its highest value in the given dataset is", max_val)
-        print("and its mean value is", str(round(mean_val, 2)))
+        print("and its mean value and std are", str(round(mean_val, 2)), "and", str(round(std_val, 2)))
 
 
 def choose_dataset(bunch, dataset):
