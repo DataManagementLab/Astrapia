@@ -52,7 +52,7 @@ class Explainer:
         
         transfer_graph = [
             ({'coverage'}, 'inverse_coverage', metric(lambda : 1 / self.coverage())),
-            ({'distance', 'get_explained_instance', 'get_neighborhood_instances'}, 'furthest_distance', metric(lambda : max(self.distance(self.get_explained_instance(), i) for i in self.get_neighborhood_instances()))),
+            ({'distance', 'get_explained_instance', 'get_neighborhood_instances'}, 'furthest_distance', metric(lambda : max(0, 0, *[self.distance(self.get_explained_instance(), i) for i in self.get_neighborhood_instances()]))),
         ]
         
         old_mu_identifiers = {}
