@@ -1,8 +1,13 @@
 
 
 def metric(fn):
-    # mark the method as something that requires view's class
+    # mark the method as something that can be calculated as a metric
     fn.tag = 'metric'
+    return fn
+
+def utility(fn):
+    # mark the method as something that can be used to infer metrics
+    fn.tag = 'utility'
     return fn
 
 
@@ -12,72 +17,54 @@ class Explainer:
     def __init__(self):
         raise NotImplementedError
         
-    @metric
-    def area(self):
-        raise NotImplementedError
-        
-    @metric
-    def coverage(self):
-        raise NotImplementedError
-        
     def metrics(self):
                 
-        def checkImplemented(f):
-            try:
-                f()
-            except NotImplementedError:
-                return False
-            return True
+        def checkImplementedMetric(f):
+            return f() != None
         
         all_metrics_strings = [x for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'metric']
         all_metrics = [getattr(self, m) for m in all_metrics_strings]
-        implemented_metrics = [metric for metric, metric_name in zip(all_metrics, all_metrics_strings) if checkImplemented(metric)]
+        implemented_metrics = [metric for metric, metric_name in zip(all_metrics, all_metrics_strings) if checkImplementedMetric(metric)]
         
-        implemented_metric_names = set([metric_name for metric, metric_name in zip(all_metrics, all_metrics_strings) if checkImplemented(metric)])
+        implemented_metric_names = set([metric_name for metric, metric_name in zip(all_metrics, all_metrics_strings) if checkImplementedMetric(metric)])
         return implemented_metric_names
     
     def infer_metrics(self):
         
-        def checkImplemented(f):
-            try:
-                f()
-            except NotImplementedError:
-                return False
-            return True
+        def checkImplementedMetric(f):
+            return f() != None
+    
         
-        all_metrics_strings = [x for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'metric']
-        all_metrics = [getattr(self, m) for m in all_metrics_strings]
-        implemented_metrics = {metric for metric, metric_name in zip(all_metrics, all_metrics_strings) if checkImplemented(metric)}
-        implemented_metric_names = set([metric_name for metric, metric_name in zip(all_metrics, all_metrics_strings) if checkImplemented(metric)])
+        all_mu_identifiers = [x for x in dir(self) if getattr(getattr(self, x), 'tag', None) in ['metric', 'utility']]
+        all_mu_references = [getattr(self, m) for m in all_mu_identifiers]
+        implemented_mu_references = {mu for mu in all_mu_references if checkImplementedMetric(mu)}
+        implemented_mu_names = set([metric_name for metric, metric_name in zip(all_mu_references, all_mu_identifiers) if checkImplementedMetric(metric)])
         
-        transfer = [
-            ({'coverage'}, 'inverse_coverage', lambda : 1 / self.coverage()),
+        transfer_graph = [
+            ({'coverage'}, 'inverse_coverage', metric(lambda : 1 / self.coverage())),
+            ({'distance', 'get_explained_instance', 'get_neighborhood_instances'}, 'furthest_distance', metric(lambda : max(self.distance(self.get_explained_instance(), i) for i in self.get_neigborhood_instances()))),
         ]
         
-        old_metrics = {}
-        new_metrics = implemented_metric_names
-        while (new_metrics != old_metrics):
-            for transfer_list in transfer:
-                if transfer_list[0] <= new_metrics:
-                    setattr(self, transfer_list[1], metric(transfer_list[2]))
+        old_mu_identifiers = {}
+        new_mu_identifiers = implemented_mu_names
+        while (new_mu_identifiers != old_mu_identifiers):
+            for transition in transfer_graph:
+                if transition[0] <= new_mu_identifiers:
+                    setattr(self, transition[1], transition[2])
                     
-            old_metrics = new_metrics
-            all_metrics_strings = [x for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'metric']
-            all_metrics = [getattr(self, m) for m in all_metrics_strings]
-            new_metrics = {metric_name for metric, metric_name in zip(all_metrics, all_metrics_strings) if checkImplemented(metric)}
+            old_mu_identifiers = new_mu_identifiers
+            all_mu_identifiers = [x for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'metric']
+            all_mu_references = [getattr(self, m) for m in all_mu_identifiers]
+            new_mu_identifiers = {metric_name for metric, metric_name in zip(all_mu_references, all_mu_identifiers) if checkImplementedMetric(metric)}
             
-        print('inferred metrics:', new_metrics)
+        print('inferred metrics:', new_mu_identifiers)
         
     def report(self):
         
-        def checkImplemented(f):
-            try:
-                f()
-            except NotImplementedError:
-                return False
-            return True
+        def checkImplementedMetric(f):
+            return f() != None
         
-        all_metrics = {(x, getattr(self, x)) for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'metric'}
-        implemented_metrics = {(x, f()) for (x, f) in all_metrics if checkImplemented(f)}
-        return implemented_metrics
+        all_mu_identifier_references = {(x, getattr(self, x)) for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'metric'}
+        implemented_mu_values = {(x, f()) for (x, f) in all_mu_identifier_references if checkImplementedMetric(f)}
+        return implemented_mu_values
                 
