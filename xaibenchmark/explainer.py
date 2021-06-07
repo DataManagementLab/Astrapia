@@ -59,6 +59,8 @@ class Explainer:
         transfer_graph = [
             ({'coverage'}, 'inverse_coverage', metric(lambda : 1 / self.coverage())),
             ({'distance', 'get_explained_instance', 'get_neighborhood_instances'}, 'furthest_distance', metric(lambda : max(0, 0, *[self.distance(self.get_explained_instance(), i) for i in self.get_neighborhood_instances()]))),
+            ({'area', 'get_training_data'}, 'area_hc_normalised', metric(lambda : self.area()**(1/self.get_training_data().shape[1]))),
+            ({'area', 'get_test_data'}, 'area_hc_normalised', metric(lambda : self.area()**(1/self.get_test_data().shape[1]))),
         ]
 
         mu_identifiers = {x for x in dir(self) if getattr(getattr(self, x), 'tag', None) in ['metric', 'utility']}
