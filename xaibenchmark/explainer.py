@@ -1,32 +1,4 @@
-
-
-def metric(fn):
-    """Decorator for tagging metrics.
-    
-    Metrics can be used to compare different explainers.
-    """
-    def wrapper(*args):
-        result = fn(*args)
-        if result is None:
-            return float('nan')
-        return result
-    wrapper.tag = 'metric'
-    return wrapper
-
-def utility(fn):
-    """Decorator for tagging utility functions.
-
-    Utility functions can be used to infer different metrics automatically.   
-    """
-    # mark the method as something that can be used to infer metrics
-    def wrapper(*args):
-        result = fn(*args)
-        if result is None:
-            return float('nan')
-        return result
-    wrapper.tag = 'utility'
-    return wrapper
-
+import xaibenchmark as xb
 
 class Explainer:
     """Base class for wrapping and comparing Explainers
@@ -54,27 +26,10 @@ class Explainer:
         return [x for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'metric']
     
     def infer_metrics(self):
-        
-        # This should be set somewhere else
-        transfer_graph = [
-            ({'coverage'}, 'inverse_coverage', metric(lambda : 1 / self.coverage())),
-            ({'distance', 'get_explained_instance', 'get_neighborhood_instances'}, 'furthest_distance', metric(lambda:
-             max(0, 0, *[self.distance(self.get_explained_instance(), i) for i in self.get_neighborhood_instances()]))),
-        ]
 
-        mu_identifiers = {x for x in dir(self) if getattr(getattr(self, x), 'tag', None) in ['metric', 'utility']}
-        
-        old_mu_identifiers = {}
-        new_mu_identifiers = mu_identifiers
-        while new_mu_identifiers != old_mu_identifiers:
-            for transition in transfer_graph:
-                if transition[0] <= new_mu_identifiers:
-                    setattr(self, transition[1], transition[2])
-                    
-            old_mu_identifiers = new_mu_identifiers
-            new_mu_identifiers = {x for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'metric'}
+        xb.transfer.use_transfer(self)
             
-        print('inferred metrics:', new_mu_identifiers)
+        print('inferred metrics:', {x for x in dir(self) if getattr(getattr(self, x), 'tag', None) in ['metric', 'utility']})
         
     def report(self):
         
