@@ -4,6 +4,7 @@ import xaibenchmark as xb
 from anchor import anchor_tabular
 import lime
 import lime.lime_tabular
+import pandas as pd
 
 
 class Explainer:
@@ -200,18 +201,43 @@ class AnchorsExplainer(Explainer):
 
 class LimeExplainer(Explainer):
 
-    def __init__(self, train_data, train_labels, predict_fn, feature_names, target_names, categorical_features=None,
-                 discretize_continuous=True):
-        self.explainer = lime.lime_tabular.LimeTabularExplainer(train_data, feature_names=feature_names,
-                                                                class_names=target_names, categorical_features=None,
-                                                                discretize_continuous=discretize_continuous)
-        self.train = train_data
-        self.train_labels = train_labels
-        self.predict_fn = predict_fn
-        self.kernel_width = np.sqrt(train_data.shape[1]) * .75
+    def __init__(self, data, predict_fn, categorical_features=None, discretize_continuous=True):
 
-    def explain_instance(self, instance, predictor, num_features=10):
-        self.explanation = self.explainer.explain_instance(instance, predictor, num_features=num_features)
+        self.categorical_features = data.categorical_features
+        self.data_keys = data.data.keys()
+
+        def preprocess(*data_df):
+            return [self.process_single(df) for df in data_df]
+
+        train, dev, test = preprocess(data.data, data.data_dev, data.data_test)
+        labels_train, labels_dev, labels_test = data.target, data.target_dev, data.target_test
+
+        self.explainer = lime.lime_tabular.LimeTabularExplainer(train, feature_names=train.keys(),
+                                                                class_names=data.target_names, categorical_features=None,
+                                                                discretize_continuous=discretize_continuous)
+        self.train = train
+        self.test = test
+        self.train_labels = labels_train
+        self.predict_fn = predict_fn
+        self.kernel_width = np.sqrt(train.shape[1]) * .75
+
+    def process_single(self, df):
+        cat_df = pd.get_dummies(df, columns=self.categorical_features.keys())
+        missing_cols = {cat + '_' + str(attr) for cat in self.categorical_features \
+                        for attr in self.categorical_features[cat]} - set(cat_df.columns)
+        for c in missing_cols:
+            cat_df[c] = 0
+
+        cont_idx = list(set(self.data_keys) - set(self.categorical_features.keys()))
+        cat_idx = [cat + '_' + str(attr) for cat in self.categorical_features \
+                   for attr in self.categorical_features[cat]]
+        idx = cont_idx + cat_idx
+        return cat_df[idx]
+
+    def explain_instance(self, instance, num_features=10):
+        instance = self.process_single(instance).iloc[0]
+        self.explanation = self.explainer.explain_instance(instance, self.predict_fn.predict_proba,
+                                                           num_features=num_features)
         self.instance = instance
         self.weighted_instances = self.get_weighted_instances()
 
