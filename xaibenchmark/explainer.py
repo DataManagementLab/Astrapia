@@ -2,7 +2,7 @@ from __future__ import print_function
 import numpy as np
 import xaibenchmark as xb
 from xaibenchmark import load_adult
-from xaibenchmark import customAnchorsPreprocessing
+from xaibenchmark import explainerPreprocessing
 from anchor import anchor_tabular
 from anchor import utils
 import lime
@@ -88,7 +88,7 @@ class AnchorsExplainer(Explainer):
         :return: the explanation
         """
 
-        instance = self.preprocessInstance(instance)
+        instance = explainerPreprocessing.anchors_preprocess_instance(self.rawdata.data.append(instance, ignore_index=True).to_numpy())
 
         self.explanation = self.explainer.explain_instance(instance, self.predictor.predict, threshold=threshold)
         self.instance = instance
@@ -209,9 +209,6 @@ class AnchorsExplainer(Explainer):
     def distance(self, x, y):
         return np.linalg.norm(x-y)
 
-    def preprocessInstance(self, instance):
-        return customAnchorsPreprocessing.load_dataset(self.rawdata.data.append(instance, ignore_index=True).to_numpy())
-
 
 class LimeExplainer(Explainer):
 
@@ -220,11 +217,8 @@ class LimeExplainer(Explainer):
         self.categorical_features = data.categorical_features
         self.data_keys = data.data.keys()
 
-        def preprocess(*data_df):
-            return [self.process_single(df) for df in data_df]
-
-        train, dev, test = preprocess(data.data, data.data_dev, data.data_test)
-        labels_train, labels_dev, labels_test = data.target, data.target_dev, data.target_test
+        train, dev, test = explainerPreprocessing.lime_preprocess_datasets(
+            [data.data, data.data_dev, data.data_test], self.categorical_features, self.data_keys)
 
         self.explainer = lime.lime_tabular.LimeTabularExplainer(train, feature_names=train.keys(),
                                                                 class_names=data.target_names, categorical_features=None,
@@ -235,21 +229,8 @@ class LimeExplainer(Explainer):
         self.predict_fn = predict_fn
         self.kernel_width = np.sqrt(train.shape[1]) * .75
 
-    def process_single(self, df):
-        cat_df = pd.get_dummies(df, columns=self.categorical_features.keys())
-        missing_cols = {cat + '_' + str(attr) for cat in self.categorical_features \
-                        for attr in self.categorical_features[cat]} - set(cat_df.columns)
-        for c in missing_cols:
-            cat_df[c] = 0
-
-        cont_idx = list(set(self.data_keys) - set(self.categorical_features.keys()))
-        cat_idx = [cat + '_' + str(attr) for cat in self.categorical_features \
-                   for attr in self.categorical_features[cat]]
-        idx = cont_idx + cat_idx
-        return cat_df[idx]
-
     def explain_instance(self, instance, num_features=10):
-        instance = self.process_single(instance).iloc[0]
+        instance = explainerPreprocessing.lime_preprocess_dataset(instance, self.categorical_features, self.data_keys).iloc[0]
         self.explanation = self.explainer.explain_instance(instance, self.predict_fn.predict_proba,
                                                            num_features=num_features)
         self.instance = instance

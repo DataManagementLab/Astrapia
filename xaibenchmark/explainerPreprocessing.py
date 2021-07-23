@@ -1,31 +1,50 @@
-"""bla"""
-# from __future__ import print_function
 import copy
 import sklearn
 import numpy as np
 import lime
 import lime.lime_tabular
-# import string
-import os
-import sys
-
-class Bunch(object):
-    """bla"""
-    def __init__(self, adict):
-        self.__dict__.update(adict)
+import pandas as pd
 
 
-def map_array_values(array, value_map):
-    # value map must be { src : target }
-    ret = array.copy()
-    for src, target in value_map.items():
-        ret[ret == src] = target
-    return ret
-def replace_binary_values(array, values):
-    return map_array_values(array, {'0': values[0], '1': values[1]})
+def lime_preprocess_datasets(data_df, categorical_features, keys):
+    """
+    Preprocesses multiple datasets to be used by LIME and a ML model that can be used by LIME
+    :param data_df: list of datasets
+    :param categorical_features: categorical features of the dataset
+    :param keys: keys of the dataset
+    :return: list of preprocessed datasets
+    """
+    return [lime_preprocess_dataset(df, categorical_features, keys) for df in data_df]
 
-def load_dataset(dataframe, balance=False, discretize=True):
 
+def lime_preprocess_dataset(df, categorical_features, keys):
+    """
+    Preprocesses a dataset to be used by LIME
+    :param df: dataset
+    :param categorical_features: categorical features of the dataset
+    :param keys: keys of the dataset
+    :return: preprocessed dataset
+    """
+    cat_df = pd.get_dummies(df, columns=categorical_features.keys())
+    missing_cols = {cat + '_' + str(attr) for cat in categorical_features
+                    for attr in categorical_features[cat]} - set(cat_df.columns)
+    for c in missing_cols:
+        cat_df[c] = 0
+
+    cont_idx = list(set(keys) - set(categorical_features.keys()))
+    cat_idx = [cat + '_' + str(attr) for cat in categorical_features
+               for attr in categorical_features[cat]]
+    idx = cont_idx + cat_idx
+    return cat_df[idx]
+
+
+def anchors_preprocess_instance(data):
+    """
+    customized data preprocessing from the Anchors library that takes a dataset with an additional instance at the end
+    of it and preprocesses the set in order to get a preprocessed representation of the additional instance
+    :param data: adult dataset with one interesting instance at the end of it
+    :return: preprocessed version of the original additional instance
+    """
 
     feature_names = ["Age", "Workclass", "fnlwgt", "Education",
                      "Education-Num", "Marital Status", "Occupation",
@@ -77,7 +96,6 @@ def load_dataset(dataframe, balance=False, discretize=True):
         'Separated', 'Separated': 'Separated', 'Divorced':
         'Separated', 'Widowed': 'Widowed'
     }
-    label_map = {'<=50K': 'Less than $50,000', '>50K': 'More than $50,000'}
 
     def cap_gains_fn(x):
         x = x.astype(float)
@@ -85,53 +103,25 @@ def load_dataset(dataframe, balance=False, discretize=True):
                         right=True).astype('|S128')
         return map_array_values(d, {'0': 'None', '1': 'Low', '2': 'High'})
 
-    transformations = {
+    feature_transformations = {
         3: lambda x: map_array_values(x, education_map),
         5: lambda x: map_array_values(x, married_map),
         6: lambda x: map_array_values(x, occupation_map),
         10: cap_gains_fn,
         11: cap_gains_fn,
         13: lambda x: map_array_values(x, country_map),
-        # 14: lambda x: map_array_values(x, label_map),
     }
-    dataset = load_csv_dataset(
-        dataframe, -1, ', ',
-        feature_names=feature_names, features_to_use=features_to_use,
-        categorical_features=categorical_features, discretize=discretize,
-        balance=balance, feature_transformations=transformations)
 
-    return dataset
-
-
-def load_csv_dataset(data, target_idx, delimiter=',',
-                     feature_names=None, categorical_features=None,
-                     features_to_use=None, feature_transformations=None,
-                     discretize=False, balance=False, fill_na='-1', filter_fn=None, skip_first=False):
-    """if not feature names, takes 1st line as feature names
-    if not features_to_use, use all except for target
-    if not categorical_features, consider everything < 20 as categorical"""
-    if feature_transformations is None:
-        feature_transformations = {}
-
-    if target_idx < 0:
-        target_idx = data.shape[1] + target_idx
+    target_idx = data.shape[1] - 1
     ret = Bunch({})
-    if feature_names is None:
-        feature_names = list(data[0])
-        data = data[1:]
-    else:
-        feature_names = copy.deepcopy(feature_names)
-    if skip_first:
-        data = data[1:]
-    if filter_fn is not None:
-        data = filter_fn(data)
+    feature_names = copy.deepcopy(feature_names)
+
     for feature, fun in feature_transformations.items():
         data[:, feature] = fun(data[:, feature])
     labels = data[:, target_idx]
     le = sklearn.preprocessing.LabelEncoder()
     le.fit(labels)
     ret.labels = le.transform(labels)
-    labels = ret.labels
     ret.class_names = list(le.classes_)
     ret.class_target = feature_names[target_idx]
     if features_to_use is not None:
@@ -141,18 +131,7 @@ def load_csv_dataset(data, target_idx, delimiter=',',
         if categorical_features is not None:
             categorical_features = ([features_to_use.index(x)
                                      for x in categorical_features])
-    else:
-        data = np.delete(data, target_idx, 1)
-        feature_names.pop(target_idx)
-        if categorical_features:
-            categorical_features = ([x if x < target_idx else x - 1
-                                     for x in categorical_features])
 
-    if categorical_features is None:
-        categorical_features = []
-        for f in range(data.shape[1]):
-            if len(np.unique(data[:, f])) < 20:
-                categorical_features.append(f)
     categorical_names = {}
     for feature in categorical_features:
         le = sklearn.preprocessing.LabelEncoder()
@@ -160,16 +139,18 @@ def load_csv_dataset(data, target_idx, delimiter=',',
         data[:, feature] = le.transform(data[:, feature])
         categorical_names[feature] = le.classes_
     data = data.astype(float)
-    ordinal_features = []
-    if discretize:
-        disc = lime.lime_tabular.QuartileDiscretizer(data,
-                                                     categorical_features,
-                                                     feature_names)
-        data = disc.discretize(data)
-        ordinal_features = [x for x in range(data.shape[1])
-                            if x not in categorical_features]
-        categorical_features = list(range(data.shape[1]))
-        categorical_names.update(disc.names)
+
+
+    # Discretization
+    disc = lime.lime_tabular.QuartileDiscretizer(data,
+                                                 categorical_features,
+                                                 feature_names)
+    data = disc.discretize(data)
+    ordinal_features = [x for x in range(data.shape[1])
+                        if x not in categorical_features]
+    categorical_features = list(range(data.shape[1]))
+    categorical_names.update(disc.names)
+
     for x in categorical_names:
         categorical_names[x] = [y.decode() if type(y) == np.bytes_ else y for y in categorical_names[x]]
     ret.ordinal_features = ordinal_features
@@ -177,16 +158,23 @@ def load_csv_dataset(data, target_idx, delimiter=',',
     ret.categorical_names = categorical_names
     ret.feature_names = feature_names
     np.random.seed(1)
-    if balance:
-        idxs = np.array([], dtype='int')
-        min_labels = np.min(np.bincount(labels))
-        for label in np.unique(labels):
-            idx = np.random.choice(np.where(labels == label)[0], min_labels)
-            idxs = np.hstack((idxs, idx))
-        data = data[idxs]
-        labels = labels[idxs]
-        ret.data = data
-        ret.labels = labels
 
     ret.data = data
     return ret.data[ret.data.shape[0]-1]
+
+
+# Content taken from Anchors library
+
+
+class Bunch(object):
+    """bla"""
+    def __init__(self, adict):
+        self.__dict__.update(adict)
+
+
+def map_array_values(array, value_map):
+    # value map must be { src : target }
+    ret = array.copy()
+    for src, target in value_map.items():
+        ret[ret == src] = target
+    return ret

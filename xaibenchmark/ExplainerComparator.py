@@ -1,8 +1,7 @@
-from xaibenchmark import explainer
+from xaibenchmark import explainer, explainerPreprocessing
 import sklearn.ensemble
 from anchor import utils
 from xaibenchmark import load_adult as la
-import pandas as pd
 
 
 class ExplainerComparator:
@@ -18,6 +17,7 @@ class ExplainerComparator:
     def explain_instance(self, instance):
         self.current_explanations = {name: explainer.explain_instance(instance) for name, explainer in self.explainers.items()}
         for _, explainer in self.explainers.items():
+            explainer.report()
             explainer.infer_metrics(printing=False)
         self.current_metrics = {name: explainer.report() for name, explainer in self.explainers.items()}
 
@@ -26,47 +26,23 @@ class ExplainerComparator:
             print(name, ":", metrics)
 
 
-data = la.load_csv_data('adult', root_path='../data')
-
-
-
-# make sure you have adult/adult.data inside dataset_folder
 dataset_folder = '../data/'
-adult_dataset = utils.load_dataset('adult', balance=True, dataset_folder=dataset_folder, discretize=True)
+data = la.load_csv_data('adult', root_path=dataset_folder)
 
-rf = sklearn.ensemble.RandomForestClassifier(n_estimators=50, n_jobs=5)
-rf.fit(adult_dataset.train, adult_dataset.labels_train)
-anchor1 = explainer.AnchorsExplainer(rf, dataset_folder)
+anchor_training_set = utils.load_dataset('adult', balance=True, dataset_folder=dataset_folder, discretize=True)
+anchor_ml_model = sklearn.ensemble.RandomForestClassifier(n_estimators=50, n_jobs=5)
+anchor_ml_model.fit(anchor_training_set.train, anchor_training_set.labels_train)
+anchor1 = explainer.AnchorsExplainer(anchor_ml_model, dataset_folder)
 
-
-def preprocess(*data_df):
-    def process_single(df):
-        cat_df = pd.get_dummies(df, columns=data.categorical_features.keys())
-        missing_cols = {cat + '_' + str(attr) for cat in data.categorical_features \
-                        for attr in data.categorical_features[cat]} - set(cat_df.columns)
-        for c in missing_cols:
-            cat_df[c] = 0
-
-        cont_idx = list(set(data.data.keys()) - set(data.categorical_features.keys()))
-        cat_idx = [cat + '_' + str(attr) for cat in data.categorical_features \
-                   for attr in data.categorical_features[cat]]
-        idx = cont_idx + cat_idx
-        return cat_df[idx]
-
-    # Preprocess function for one-hot encoding categorical data
-    return [process_single(df) for df in data_df]
-
-
-train, dev, test = preprocess(data.data, data.data_dev, data.data_test)
-labels_train, labels_dev, labels_test = data.target, data.target_dev, data.target_test
-rf2 = sklearn.ensemble.RandomForestClassifier(n_estimators=100)
-rf2.fit(train, labels_train.to_numpy().reshape(-1))
-lime1 = explainer.LimeExplainer(data, rf2, discretize_continuous=False)
+lime_training_set = explainerPreprocessing.lime_preprocess_dataset(data.data, data.categorical_features, data.data.keys())
+lime_ml_model = sklearn.ensemble.RandomForestClassifier(n_estimators=100)
+lime_ml_model.fit(lime_training_set, data.target.to_numpy().reshape(-1))
+lime1 = explainer.LimeExplainer(data, lime_ml_model, discretize_continuous=False)
 
 x = data.data.iloc[[5000]]
 
-ourfirstcollector = ExplainerComparator()
-ourfirstcollector.add_explainer(anchor1, "ANCHORS")
-ourfirstcollector.add_explainer(lime1, "LIME")
-ourfirstcollector.explain_instance(data.data.iloc[[5000]])
-ourfirstcollector.print_metrics()
+ourFirstCollector = ExplainerComparator()
+ourFirstCollector.add_explainer(anchor1, "ANCHORS")
+ourFirstCollector.add_explainer(lime1, "LIME")
+ourFirstCollector.explain_instance(data.data.iloc[[5000]])
+ourFirstCollector.print_metrics()
