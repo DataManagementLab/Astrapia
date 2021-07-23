@@ -41,7 +41,8 @@ def lime_preprocess_dataset(df, categorical_features, keys):
 def anchors_preprocess_instance(data):
     """
     customized data preprocessing from the Anchors library that takes a dataset with an additional instance at the end
-    of it and preprocesses the set in order to get a preprocessed representation of the additional instance
+    of it and preprocesses the set in order to get a preprocessed representation of the additional instance. Differs
+    from original functionality mainly in the way that it does not shuffle or split the data
     :param data: adult dataset with one interesting instance at the end of it
     :return: preprocessed version of the original additional instance
     """

@@ -15,8 +15,8 @@ class ExplainerComparator:
         self.explainers[name] = explainer
 
     def explain_instance(self, instance):
-        self.current_explanations = {name: explainer.explain_instance(instance) for name, explainer in self.explainers.items()}
-        for _, explainer in self.explainers.items():
+        for name, explainer in self.explainers.items():
+            self.current_explanations[name] = explainer.explain_instance(instance)
             explainer.report()
             explainer.infer_metrics(printing=False)
         self.current_metrics = {name: explainer.report() for name, explainer in self.explainers.items()}
