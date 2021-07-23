@@ -1,7 +1,10 @@
 from __future__ import print_function
 import numpy as np
 import xaibenchmark as xb
+from xaibenchmark import load_adult
+from xaibenchmark import customAnchorsPreprocessing
 from anchor import anchor_tabular
+from anchor import utils
 import lime
 import lime.lime_tabular
 import pandas as pd
@@ -32,14 +35,12 @@ class Explainer:
     def metrics(self):
         return [x for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'metric']
     
-    def infer_metrics(self):
-
+    def infer_metrics(self, printing=True):
         xb.transfer.use_transfer(self)
-            
-        print('inferred metrics:', {x for x in dir(self) if getattr(getattr(self, x), 'tag', None) in ['metric', 'utility']})
+        if printing:
+            print('inferred metrics:', {x for x in dir(self) if getattr(getattr(self, x), 'tag', None) in ['metric', 'utility']})
         
     def report(self):
-        
         all_mu_identifier_references = {(x, getattr(self, x)) for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'metric'}
         implemented_mu_values = {(x, f()) for (x, f) in all_mu_identifier_references}
         return implemented_mu_values
@@ -50,7 +51,11 @@ class AnchorsExplainer(Explainer):
     implementation of the Explainer "Anchors" onto the base explainer class
     """
 
-    def __init__(self, predictor, dataset):
+    def __init__(self, predictor, dataset_folder):
+
+        dataset = utils.load_dataset('adult', balance=True, dataset_folder=dataset_folder, discretize=True)
+        self.rawdata = load_adult.load_csv_data('adult', root_path='../data')
+
         self.explainer = anchor_tabular.AnchorTabularExplainer(
             dataset.class_names,
             dataset.feature_names,
@@ -74,7 +79,7 @@ class AnchorsExplainer(Explainer):
         else:
             raise NameError("This subset name is not one of train, dev, test.")
 
-    def explain_instance(self, instance, instance_set, threshold=0.95):
+    def explain_instance(self, instance, instance_set="train", threshold=0.70):
         """
         Creates an Anchor explanation based on a given instance
         :param instance: "Anchor" for explanation
@@ -82,6 +87,9 @@ class AnchorsExplainer(Explainer):
         :param threshold: Worst possible precision for the explanation
         :return: the explanation
         """
+
+        instance = self.preprocessInstance(instance)
+
         self.explanation = self.explainer.explain_instance(instance, self.predictor.predict, threshold=threshold)
         self.instance = instance
         self.instance_set, self.instance_label_set = self.get_subset(instance_set)
@@ -140,9 +148,11 @@ class AnchorsExplainer(Explainer):
         with an assigned label (by the ML model) value of 1
         """
         if hasattr(self, 'explanation'):
-            if dataset is None :
+            if dataset is None:
                 dataset = self.instance_set
-            return np.mean(self.predictor.predict(self.dataset.train[self.get_fit_anchor(dataset)]))
+            relevant_examples = dataset[self.get_fit_anchor(dataset)]
+            if len(relevant_examples) > 0:
+                return np.mean(self.predictor.predict(relevant_examples))
 
     @xb.metric
     def area(self):
@@ -172,8 +182,9 @@ class AnchorsExplainer(Explainer):
                 dataset = self.instance_set
             explanation_label = self.explanation.exp_map["prediction"]
             relevant_examples = dataset[self.get_fit_anchor(dataset)]
-            ml_pred = self.predictor.predict(relevant_examples)
-            return np.count_nonzero(ml_pred == explanation_label) / len(relevant_examples)
+            if len(relevant_examples) > 0:
+                ml_pred = self.predictor.predict(relevant_examples)
+                return np.count_nonzero(ml_pred == explanation_label) / len(relevant_examples)
 
     @xb.utility
     def get_neighborhood_instances(self):
@@ -198,6 +209,9 @@ class AnchorsExplainer(Explainer):
     def distance(self, x, y):
         return np.linalg.norm(x-y)
 
+    def preprocessInstance(self, instance):
+        return customAnchorsPreprocessing.load_dataset(self.rawdata.data.append(instance, ignore_index=True).to_numpy())
+
 
 class LimeExplainer(Explainer):
 
@@ -216,8 +230,8 @@ class LimeExplainer(Explainer):
                                                                 class_names=data.target_names, categorical_features=None,
                                                                 discretize_continuous=discretize_continuous)
         self.train = train
+        self.dev = dev
         self.test = test
-        self.train_labels = labels_train
         self.predict_fn = predict_fn
         self.kernel_width = np.sqrt(train.shape[1]) * .75
 
