@@ -15,10 +15,10 @@ class AnchorsExplainer(Explainer):
     implementation of the Explainer "Anchors" onto the base explainer class
     """
 
-    def __init__(self, predictor, dataset_folder):
+    def __init__(self, predictor, dataset_folder, dataset_name):
 
-        dataset = utils.load_dataset('adult', balance=True, dataset_folder=dataset_folder, discretize=True)
-        self.rawdata = load_adult.load_csv_data('adult', root_path='../data')
+        dataset = utils.load_dataset(dataset_name, balance=True, dataset_folder=dataset_folder, discretize=True)
+        self.rawdata = load_adult.load_csv_data(dataset_name, root_path=dataset_folder)
 
         self.explainer = anchor_tabular.AnchorTabularExplainer(
             dataset.class_names,

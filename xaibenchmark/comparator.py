@@ -2,6 +2,7 @@ from xaibenchmark import explainer, preprocessing
 import sklearn.ensemble
 from anchor import utils
 from xaibenchmark import load_adult as la
+import xaibenchmark.explainers as explainers
 
 
 class ExplainerComparator:
@@ -33,12 +34,12 @@ if __name__ == "__main__":
     anchor_training_set = utils.load_dataset('adult', balance=True, dataset_folder=dataset_folder, discretize=True)
     anchor_ml_model = sklearn.ensemble.RandomForestClassifier(n_estimators=50, n_jobs=5)
     anchor_ml_model.fit(anchor_training_set.train, anchor_training_set.labels_train)
-    anchor1 = explainer.AnchorsExplainer(anchor_ml_model, dataset_folder)
+    anchor1 = explainers.AnchorsExplainer(anchor_ml_model, dataset_folder, 'adult')
 
     lime_training_set = preprocessing.lime_preprocess_dataset(data.data, data.categorical_features, data.data.keys())
     lime_ml_model = sklearn.ensemble.RandomForestClassifier(n_estimators=100)
     lime_ml_model.fit(lime_training_set, data.target.to_numpy().reshape(-1))
-    lime1 = explainer.LimeExplainer(data, lime_ml_model, discretize_continuous=False)
+    lime1 = explainers.LimeExplainer(data, lime_ml_model, discretize_continuous=False)
 
     x = data.data.iloc[[5000]]
 

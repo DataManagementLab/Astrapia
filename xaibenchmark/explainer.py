@@ -1,13 +1,5 @@
 from __future__ import print_function
-import numpy as np
 import xaibenchmark as xb
-from xaibenchmark import load_adult
-from xaibenchmark import preprocessing
-from anchor import anchor_tabular
-from anchor import utils
-import lime
-import lime.lime_tabular
-import pandas as pd
 
 
 class Explainer:
