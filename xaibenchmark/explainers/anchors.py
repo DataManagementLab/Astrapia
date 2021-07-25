@@ -10,6 +10,7 @@ from xaibenchmark import preprocessing
 from xaibenchmark import Explainer
 import xaibenchmark as xb
 
+
 class AnchorsExplainer(Explainer):
     """
     implementation of the Explainer "Anchors" onto the base explainer class
@@ -128,9 +129,6 @@ class AnchorsExplainer(Explainer):
         if hasattr(self, 'explanation'):
             array = np.amax(self.dataset.train, axis=0)[self.explanation.features()]
             array = array + 1
-            # 1/4*1*1*1*1/10 = 2.5%
-            # optionally with n-th root. n=amount of features or dimension of features?
-            # print(np.power(np.prod(1 / array), 1/len(array)), np.power(np.prod(1 / array), 1/np.sum(array)))
             return np.prod(1 / array)
         return np.nan
 
@@ -164,7 +162,8 @@ class AnchorsExplainer(Explainer):
     @xb.utility
     def get_fit_anchor(self, dataset):
         return np.where(np.all(dataset[:, self.explanation.features()] ==
-                                         self.instance[self.explanation.features()], axis=1))[0]
+                               self.instance[self.explanation.features()], axis=1))[0]
+
     @xb.utility
     def get_explained_instance(self):
         return self.instance

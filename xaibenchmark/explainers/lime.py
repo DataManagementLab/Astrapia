@@ -1,17 +1,11 @@
 import numpy as np
-import xaibenchmark.utils as utils
-
-from anchor import anchor_tabular
-from anchor import utils
-
-from xaibenchmark import load_adult
-from xaibenchmark import preprocessing 
-
+from xaibenchmark import preprocessing
 from xaibenchmark import Explainer
 import xaibenchmark as xb
 
 import lime
 import lime.lime_tabular
+
 
 class LimeExplainer(Explainer):
 
@@ -105,7 +99,7 @@ class LimeExplainer(Explainer):
             def kernel(distance):
                 return np.sqrt(np.exp(-distance ** 2 / kernel_width ** 2))
 
-            return [(instance, kernel(self.distance(self.instance, instance))) \
+            return [(instance, kernel(self.distance(self.instance, instance)))
                     for instance in self.train.to_numpy()]
         return []
 
@@ -119,8 +113,6 @@ class LimeExplainer(Explainer):
 
     @xb.utility
     def predict_instance_surrogate(self, instance):
-        return np.clip(self.explanation.intercept[1] + sum(weight * \
-                                                           ((
-                                                                        instance - self.explainer.scaler.mean_) / self.explainer.scaler.scale_)[
-                                                               idx] \
+        return np.clip(self.explanation.intercept[1] + sum(weight * ((instance - self.explainer.scaler.mean_) /
+                                                                     self.explainer.scaler.scale_)[idx]
                                                            for idx, weight in self.explanation.local_exp[1]), 0, 1)
