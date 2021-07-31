@@ -1,50 +1,82 @@
-from xaibenchmark import explainer, preprocessing
-import sklearn.ensemble
-from anchor import utils
-from xaibenchmark import load_adult as la
-import xaibenchmark.explainers as explainers
+from collections import defaultdict
 
 
 class ExplainerComparator:
 
     def __init__(self):
         self.explainers = {}
-        self.current_metrics = {}
-        self.current_explanations = {}
+        self.averaged_metrics = {}
+        self.explanations = {}
+        self.metrics = {}
 
     def add_explainer(self, explainer, name):
+        """
+        Add an instantiated explainer to the comparator
+        :param explainer: explainer as python object
+        :param name: name that is supposed to be used for the explainer
+        """
         self.explainers[name] = explainer
 
-    def explain_instance(self, instance):
+    def explain_instances(self, instances):
+        """
+        Create explanations for all combinations of provided explainers and instances, then save metrics
+        :param instances: instances to be used to create explanations as pandas dataframe
+        """
+
+        # Reset aggregation attributes
+        self.averaged_metrics = {}
+        self.explanations = {}
+        self.metrics = {}
+
+        # Iterate over all explainers
         for name, explainer in self.explainers.items():
-            self.current_explanations[name] = explainer.explain_instance(instance)
-            explainer.report()
-            explainer.infer_metrics(printing=False)
-        self.current_metrics = {name: explainer.report() for name, explainer in self.explainers.items()}
+            explainer_average_metrics = defaultdict(float)
+            aggregated_explainer_metrics = {}
+            aggregated_explanations = {}
 
-    def print_metrics(self):
-        for name, metrics in self.current_metrics.items():
-            print(name, ":", metrics)
+            # iterate over all instances
+            for index in range(0, instances.shape[0]):
+                explanation = explainer.explain_instance(instances.iloc[[index]])
+                explainer.report()
+                explainer.infer_metrics(printing=False)
 
+                explanation_metrics = {}
+                for (metric, value) in explainer.report():
+                    # add up metrics in order to compute average values later
+                    explainer_average_metrics[metric] += value
+                    # save metrics of the explanation separately
+                    explanation_metrics[metric] = value
 
-if __name__ == "__main__":
-    dataset_folder = '../data/'
-    data = la.load_csv_data('adult', root_path=dataset_folder)
+                aggregated_explainer_metrics[index] = explanation_metrics
+                aggregated_explanations[index] = explanation
 
-    anchor_training_set = utils.load_dataset('adult', balance=True, dataset_folder=dataset_folder, discretize=True)
-    anchor_ml_model = sklearn.ensemble.RandomForestClassifier(n_estimators=50, n_jobs=5)
-    anchor_ml_model.fit(anchor_training_set.train, anchor_training_set.labels_train)
-    anchor1 = explainers.AnchorsExplainer(anchor_ml_model, dataset_folder, 'adult')
+            # compute average metrics by dividing added metrics by the amount of provided instances
+            explainer_average_metrics = {metric: value/instances.shape[0]
+                                         for metric, value in explainer_average_metrics.items()}
 
-    lime_training_set = preprocessing.lime_preprocess_dataset(data.data, data.categorical_features, data.data.keys())
-    lime_ml_model = sklearn.ensemble.RandomForestClassifier(n_estimators=100)
-    lime_ml_model.fit(lime_training_set, data.target.to_numpy().reshape(-1))
-    lime1 = explainers.LimeExplainer(data, lime_ml_model, discretize_continuous=False)
+            self.averaged_metrics[name] = explainer_average_metrics
+            self.metrics[name] = aggregated_explainer_metrics
+            self.explanations[name] = aggregated_explanations
 
-    x = data.data.iloc[[5000]]
+    def print_metrics(self, explainer="", index=None):
+        """
+        Output metrics of the explanations on the console. Either averaged metrics or metrics from single explanations
+        :param explainer: Optional, in case you only want metrics from one explainer
+        :param index: Optional, in case you only want metrics from one explanation
+        """
+        if explainer != "":
+            if index is not None:
+                output = self.metrics[explainer][index]
+                print("Metric values for explainer", explainer,
+                      ", explanation created with the", index, "-th instance of the given data")
+            else:
+                output = self.averaged_metrics[explainer]
+                print("Average metric values for the explainer", explainer)
+            for metric, value in output.items():
+                print("\t", metric, ":", value)
 
-    ourFirstCollector = ExplainerComparator()
-    ourFirstCollector.add_explainer(anchor1, "ANCHORS")
-    ourFirstCollector.add_explainer(lime1, "LIME")
-    ourFirstCollector.explain_instance(data.data.iloc[[5000]])
-    ourFirstCollector.print_metrics()
+        else:
+            for name, metrics in self.averaged_metrics.items():
+                print("Average metric values for explainer", name, ":")
+                for metric, value in metrics.items():
+                    print("\t", metric, ":", value)
