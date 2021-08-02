@@ -18,6 +18,9 @@ class ExplainerComparator:
         # value: dictionary with key: name of metric, value: metric value
         self.metrics = {}
 
+        # instances that are used to create explanations
+        self.instances = None
+
     def add_explainer(self, explainer, name):
         """
         Add an instantiated explainer to the comparator
@@ -36,6 +39,7 @@ class ExplainerComparator:
         self.averaged_metrics = {}
         self.explanations = {}
         self.metrics = {}
+        self.instances = instances
 
         # Iterate over all explainers
         for name, explainer in self.explainers.items():
