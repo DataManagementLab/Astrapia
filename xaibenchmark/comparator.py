@@ -4,9 +4,18 @@ from collections import defaultdict
 class ExplainerComparator:
 
     def __init__(self):
+        # Dictionary with key: name of explainer, value: explainer as object
         self.explainers = {}
+
+        # Dictionary with key: name of explainer, value: dictionary with key: name of metric, value: average value
         self.averaged_metrics = {}
+
+        # Dictionary with key: name of explainer, value: dictionary with key: index of explanation,
+        # value: explanation as object
         self.explanations = {}
+
+        # Dictionary with key: name of explainer, value: dictionary with key: index of explanation,
+        # value: dictionary with key: name of metric, value: metric value
         self.metrics = {}
 
     def add_explainer(self, explainer, name):
@@ -58,20 +67,20 @@ class ExplainerComparator:
             self.metrics[name] = aggregated_explainer_metrics
             self.explanations[name] = aggregated_explanations
 
-    def print_metrics(self, explainer="", index=None):
+    def print_metrics(self, explainer=None, index=None):
         """
         Output metrics of the explanations on the console. Either averaged metrics or metrics from single explanations
         :param explainer: Optional, in case you only want metrics from one explainer
         :param index: Optional, in case you only want metrics from one explanation
         """
-        if explainer != "":
+        if explainer is not None:
             if index is not None:
                 output = self.metrics[explainer][index]
                 print("Metric values for explainer", explainer,
                       ", explanation created with the", index, "-th instance of the given data")
             else:
                 output = self.averaged_metrics[explainer]
-                print("Average metric values for the explainer", explainer)
+                print("Average metric values for the explainer", explainer, ":")
             for metric, value in output.items():
                 print("\t", metric, ":", value)
 
