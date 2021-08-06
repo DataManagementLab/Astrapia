@@ -1,5 +1,5 @@
 from collections import defaultdict
-
+from xaibenchmark.samplers import base_sampler, random, splime
 
 class ExplainerComparator:
 
@@ -34,6 +34,10 @@ class ExplainerComparator:
         Create explanations for all combinations of provided explainers and instances, then save metrics
         :param instances: instances to be used to create explanations as pandas dataframe
         """
+
+        # Debug, TODO: remove
+        print(instances)
+        # End Debug
 
         # Reset aggregation attributes
         self.averaged_metrics = {}
@@ -70,6 +74,42 @@ class ExplainerComparator:
             self.averaged_metrics[name] = explainer_average_metrics
             self.metrics[name] = aggregated_explainer_metrics
             self.explanations[name] = aggregated_explanations
+
+    def explain_representative(self, data, sampler='random', count=10, verbose=False):
+        """
+        Create a representative explanation for the given data
+        :param data: pandas dataframe with the data to be explained
+        :param sampler: sampler to be used to create representative explanation
+        :param count: amount of representative samples to be created
+        :param verbose: print details of the created explanation       
+        """
+
+        # Map sampler names to objects
+        # Add new samplers here
+        sampler_map = {
+            'random': random.RandomSampler,
+            'splime': splime.SPLimeSampler,
+        }
+        if issubclass(type(sampler), base_sampler.Sampler):
+            # sampler is an object
+            sampler = sampler()
+        elif sampler in sampler_map:
+            # sampler is a string
+            sampler = sampler_map[sampler]()
+        else:
+            # sampler is unknown
+            raise Exception('Invalid sampler \''+sampler+'\'')
+
+        # sampler is now a Sampler object
+        # sample instances and explain them
+        instances = sampler.sample(data, count)
+        
+        if verbose:
+            print('---- sampled representative instanes ----')
+            print(instances)
+
+        return self.explain_instances(instances)
+        
 
     def print_metrics(self, explainer=None, index=None):
         """
