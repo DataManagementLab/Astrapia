@@ -35,10 +35,6 @@ class ExplainerComparator:
         :param instances: instances to be used to create explanations as pandas dataframe
         """
 
-        # Debug, TODO: remove
-        print(instances)
-        # End Debug
-
         # Reset aggregation attributes
         self.averaged_metrics = {}
         self.explanations = {}
