@@ -113,12 +113,12 @@ class ExplainerComparator:
                 fig = go.Figure(data=[go.Table(
                     header=dict(values=['metric', explainer],
                                 line_color='#bfbfbf',
-                                fill_color='#e05e5df',
+                                fill_color='#e0e5df',
                                 align='left'),
                     cells=dict(values=[[metric for metric, _ in normalized_pair],  # 1st column
                                        [value for _, value in normalized_pair]],  # 2nd column
                                line_color='#bfbfbf',
-                               fill_color='#ve05e5df',
+                               fill_color='#e0e5df',
                                align='left'))
                 ])
                 fig.show()
@@ -143,12 +143,12 @@ class ExplainerComparator:
                     fig = go.Figure(data=[go.Table(
                         header=dict(values=['metric', explainer],
                                     line_color='#bfbfbf',
-                                    fill_color='#ve05e5df',
+                                    fill_color='#e0e5df',
                                     align='left'),
                         cells=dict(values=[[metric for metric, _ in normalized_pair],  # 1st column
                                            [value for _, value in normalized_pair]],  # 2nd column
                                    line_color='#bfbfbf',
-                                   fill_color='#ve05e5df',
+                                   fill_color='#e0e5df',
                                    align='left'))
                     ])
                     fig.show()
