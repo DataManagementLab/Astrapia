@@ -16,7 +16,7 @@ def model_properties( y_test, modelpredictions, labels=[]):
 
 def normalize(lst):
     """
-    only normalize non-relative metrics, which is out of the [0,1] range
+    Returns a sorted list of tuple (metric, value). Used to normalize non-relative metrics that is out of range [0,1].
     """
     new_lst = []
     max_val = max([i for _, i in lst])

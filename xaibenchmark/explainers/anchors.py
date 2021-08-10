@@ -19,7 +19,9 @@ class AnchorsExplainer(Explainer):
     def __init__(self, predictor, dataset_folder, dataset_name):
 
         dataset = utils.load_dataset(dataset_name, balance=True, dataset_folder=dataset_folder, discretize=True)
-        self.rawdata = load_adult.load_csv_data(dataset_name, root_path=dataset_folder)
+
+        if dataset_name == 'aduit':
+            self.rawdata = load_adult.load_csv_data(dataset_name, root_path=dataset_folder)
 
         self.explainer = anchor_tabular.AnchorTabularExplainer(
             dataset.class_names,
