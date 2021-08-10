@@ -98,9 +98,9 @@ class ExplainerComparator:
                 print("\t", metric, ":", value)
 
             pair = list(zip(output.keys(), output.values()))
-            normalized_pair = normalize(pair)
 
             if plot == 'bar':
+                normalized_pair = normalize(pair)
                 fig = go.Figure([go.Bar(x=[metric for metric, _ in normalized_pair],
                                         y=[value for _, value in normalized_pair],
                                         marker_color='#96a48b')])
@@ -115,8 +115,8 @@ class ExplainerComparator:
                                 line_color='#bfbfbf',
                                 fill_color='#e0e5df',
                                 align='left'),
-                    cells=dict(values=[[metric for metric, _ in normalized_pair],  # 1st column
-                                       [value for _, value in normalized_pair]],  # 2nd column
+                    cells=dict(values=[[metric for metric, _ in pair],  # 1st column
+                                       [round(value, 4) for _, value in pair]],  # 2nd column
                                line_color='#bfbfbf',
                                fill_color='#e0e5df',
                                align='left'))
@@ -130,9 +130,9 @@ class ExplainerComparator:
                     print("\t", metric, ":", value)
 
                 pair = list(zip(metrics.keys(), metrics.values()))
-                normalized_pair = normalize(pair)
 
                 if plot == 'bar':
+                    normalized_pair = normalize(pair)
                     fig = go.Figure([go.Bar(x=[metric for metric, _ in normalized_pair],
                                             y=[value for _, value in normalized_pair],
                                             marker_color='#7b8b6f')])
@@ -145,8 +145,8 @@ class ExplainerComparator:
                                     line_color='#bfbfbf',
                                     fill_color='#e0e5df',
                                     align='left'),
-                        cells=dict(values=[[metric for metric, _ in normalized_pair],  # 1st column
-                                           [value for _, value in normalized_pair]],  # 2nd column
+                        cells=dict(values=[[metric for metric, _ in pair],  # 1st column
+                                           [round(value, 4) for _, value in pair]],  # 2nd column
                                    line_color='#bfbfbf',
                                    fill_color='#e0e5df',
                                    align='left'))
