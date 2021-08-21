@@ -20,7 +20,7 @@ class AnchorsExplainer(Explainer):
 
         dataset = utils.load_dataset(dataset_name, balance=True, dataset_folder=dataset_folder, discretize=True)
 
-        if dataset_name == 'aduit':
+        if dataset_name == 'adult':
             self.rawdata = load_adult.load_csv_data(dataset_name, root_path=dataset_folder)
 
         self.explainer = anchor_tabular.AnchorTabularExplainer(
