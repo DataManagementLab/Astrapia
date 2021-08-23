@@ -59,17 +59,9 @@ def normalize2(dicts):
 
     return res
 
-def visualize_table(name, pair):
-    fig = go.Figure(data=[go.Table(
-        header=dict(values=['metric', 'value'],
-                    line_color='#bfbfbf',
-                    fill_color='#e0e5df',
-                    align='left'),
-        cells=dict(values=[[metric for metric, _ in pair],  # 1st column
-                           [round(value, 4) for _, value in pair]],  # 2nd column
-                   line_color='#bfbfbf',
-                   fill_color='#e0e5df',
-                   align='left'))
-    ])
-    fig.update_layout(title_text=f'Metrics from explainer {name}')
-    fig.show()
+
+def fill_in_value(metric_dict, metric):
+    if metric in metric_dict:
+        return round(metric_dict[metric], 6)
+    else:
+        return '-'
