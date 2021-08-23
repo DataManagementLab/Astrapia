@@ -1,7 +1,8 @@
 from collections import defaultdict
 from xaibenchmark.utils import normalize
+from xaibenchmark.utils import normalize2
+from xaibenchmark.utils import visualize_table
 import plotly.graph_objects as go
-import pandas as pd
 
 
 class ExplainerComparator:
@@ -93,7 +94,6 @@ class ExplainerComparator:
                 output = self.averaged_metrics[explainer]
                 print("Average metric values for the explainer", explainer, ":")
 
-
             for metric, value in output.items():
                 print("\t", metric, ":", value)
 
@@ -110,45 +110,44 @@ class ExplainerComparator:
                                   plot_bgcolor='#fffaf4')
                 fig.show()
             elif plot == 'table':
-                fig = go.Figure(data=[go.Table(
-                    header=dict(values=['metric', explainer],
-                                line_color='#bfbfbf',
-                                fill_color='#e0e5df',
-                                align='left'),
-                    cells=dict(values=[[metric for metric, _ in pair],  # 1st column
-                                       [round(value, 4) for _, value in pair]],  # 2nd column
-                               line_color='#bfbfbf',
-                               fill_color='#e0e5df',
-                               align='left'))
-                ])
-                fig.show()
+                visualize_table(explainer, pair)
 
         else:
             for name, metrics in self.averaged_metrics.items():
-                print("Average metric values for explainer", name, ":")
-                for metric, value in metrics.items():
-                    print("\t", metric, ":", value)
+                # print("Average metric values for explainer", name, ":")
+                # for metric, value in metrics.items():
+                #     print("\t", metric, ":", value)
 
-                pair = list(zip(metrics.keys(), metrics.values()))
+                if plot == 'table':
+                    pair = list(zip(metrics.keys(), metrics.values()))
+                    visualize_table(name, pair)
 
-                if plot == 'bar':
-                    normalized_pair = normalize(pair)
-                    fig = go.Figure([go.Bar(x=[metric for metric, _ in normalized_pair],
-                                            y=[value for _, value in normalized_pair],
-                                            marker_color='#7b8b6f')])
-                    fig.update_layout(title_text=f'Metric Comparison',
-                                      plot_bgcolor='#ececea')
-                    fig.show()
-                elif plot == 'table':
-                    fig = go.Figure(data=[go.Table(
-                        header=dict(values=['metric', explainer],
-                                    line_color='#bfbfbf',
-                                    fill_color='#e0e5df',
-                                    align='left'),
-                        cells=dict(values=[[metric for metric, _ in pair],  # 1st column
-                                           [round(value, 4) for _, value in pair]],  # 2nd column
-                                   line_color='#bfbfbf',
-                                   fill_color='#e0e5df',
-                                   align='left'))
-                    ])
-                    fig.show()
+            if plot == 'bar':
+                normalized_metrics = [(name, normalize(list(zip(metrics.keys(), metrics.values()))))
+                                      for name, metrics in self.averaged_metrics.items()]
+                normalized2_metrics = [(name, (list(zip(metrics.keys(), metrics.values()))))
+                                       for name, metrics in normalize2(self.averaged_metrics).items()]
+                # original metrics
+                # print([(name, list(zip(metrics.keys(), metrics.values())))
+                #        for name, metrics in self.averaged_metrics.items()])
+                # metrics normalized
+                # print(normalized_metrics)
+                # metrics normalized with new normalization
+                # print(sorted(normalized2_metrics, key=lambda x: x[0]))
+
+                # original normalization
+                fig = go.Figure(data=[go.Bar(name=name,
+                                             x=[metric for metric, _ in normalized_pair],
+                                             y=[value for _, value in normalized_pair])
+                                      for (name, normalized_pair) in normalized_metrics])
+                fig.update_layout(barmode='group', title_text=f'Metric Comparison original normalization', plot_bgcolor='#ececea')
+                fig.show()
+
+                # new normalization
+                fig = go.Figure(data=[go.Bar(name=name,
+                                             x=[metric for metric, _ in normalized_pair],
+                                             y=[value for _, value in normalized_pair])
+                                      for (name, normalized_pair) in normalized2_metrics])
+                fig.update_layout(barmode='group', title_text=f'Metric Comparison new normalization', plot_bgcolor='#ececea')
+                fig.show()
+

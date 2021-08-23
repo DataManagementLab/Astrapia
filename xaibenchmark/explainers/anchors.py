@@ -16,7 +16,7 @@ class AnchorsExplainer(Explainer):
     implementation of the Explainer "Anchors" onto the base explainer class
     """
 
-    def __init__(self, predictor, dataset_folder, dataset_name):
+    def __init__(self, predictor, dataset_folder, dataset_name, min_precision):
 
         dataset = utils.load_dataset(dataset_name, balance=True, dataset_folder=dataset_folder, discretize=True)
 
@@ -30,6 +30,7 @@ class AnchorsExplainer(Explainer):
             dataset.categorical_names)
         self.dataset = dataset
         self.predictor = predictor
+        self.min_precision = min_precision
 
     def get_subset(self, subset_name):
         """
@@ -46,7 +47,7 @@ class AnchorsExplainer(Explainer):
         else:
             raise NameError("This subset name is not one of train, dev, test.")
 
-    def explain_instance(self, instance, instance_set="train", threshold=0.70):
+    def explain_instance(self, instance, instance_set="train"):
         """
         Creates an Anchor explanation based on a given instance
         :param instance: "Anchor" for explanation
@@ -56,8 +57,7 @@ class AnchorsExplainer(Explainer):
         """
 
         instance = preprocessing.anchors_preprocess_instance(self.rawdata.data.append(instance, ignore_index=True).to_numpy())
-
-        self.explanation = self.explainer.explain_instance(instance, self.predictor.predict, threshold=threshold)
+        self.explanation = self.explainer.explain_instance(instance, self.predictor.predict, threshold=self.min_precision)
         self.instance = instance
         self.instance_set, self.instance_label_set = self.get_subset(instance_set)
         return self.explanation
