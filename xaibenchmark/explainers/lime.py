@@ -1,7 +1,12 @@
 import numpy as np
+from pandas.core.frame import DataFrame
+from pandas.core.series import Series
 from xaibenchmark import preprocessing
 from xaibenchmark import Explainer
 import xaibenchmark as xb
+import pandas as pd
+
+from functools import reduce
 
 import lime
 import lime.lime_tabular
@@ -9,26 +14,60 @@ import lime.lime_tabular
 
 class LimeExplainer(Explainer):
 
-    def __init__(self, data, predict_fn, categorical_features=None, discretize_continuous=True):
+    def __init__(self, data, predict_fn, discretize_continuous=True):
 
         self.categorical_features = data.categorical_features
         self.data_keys = data.data.keys()
+        self.data = data
 
-        train, dev, test = preprocessing.lime_preprocess_datasets(
-            [data.data, data.data_dev, data.data_test], self.categorical_features, self.data_keys)
+        self.train = self.transform_dataset(data.data, data)
+        self.dev = self.transform_dataset(data.data_dev, data)
+        self.test = self.transform_dataset(data.data_test, data)
 
-        self.explainer = lime.lime_tabular.LimeTabularExplainer(train, feature_names=train.keys(),
+        self.explainer = lime.lime_tabular.LimeTabularExplainer(self.train, feature_names=self.train.keys(),
                                                                 class_names=data.target_names, categorical_features=None,
                                                                 discretize_continuous=discretize_continuous)
-        self.train = train
-        self.dev = dev
-        self.test = test
-        self.predict_fn = predict_fn
-        self.kernel_width = np.sqrt(train.shape[1]) * .75
+
+        self.predict = predict_fn
+        self.kernel_width = np.sqrt(self.train  .shape[1]) * .75
+
+    def transform_dataset(self, data: pd.DataFrame, meta: xb.Dataset) -> any:
+
+        transformed_df = pd.DataFrame(index=data.index)
+
+        for feature in set(data.columns) - set(meta.categorical_features):
+            transformed_df[feature] = data[feature]
+
+        for feature in meta.categorical_features:
+            for label in meta.categorical_features[feature]:
+                transformed_df[feature+'_'+str(label)] = (data[feature]==label).astype(int)
+
+        return transformed_df
+
+    def inverse_transform_dataset(self, data: pd.DataFrame, meta: xb.Dataset):
+        """
+        Inverse transform an explainer-specific dataset into the general Astrapia Dataset format
+
+        :param data: pandas dataframe holding data in the shape LIME needs it
+        :param meta: Astrapia Dataset object holding meta information that does not depend on data instances
+        :returns: pandas dataframe in Astrapia Dataset format
+        """
+        df = pd.DataFrame(index=data.index)
+        for feature in meta.categorical_features:
+            #df.idxmax(axis=1)
+            #x = df[[feature+'_'+str(label) for label in meta.categorical_features[feature]]]
+            #df[feature] = max(meta.categorical_features[feature], key=lambda label: data[feature+'_'+str(label)])
+
+            max_indices = np.argmax(data[[feature+'_'+str(l) for l in meta.categorical_features[feature]]].to_numpy(), axis=1)
+            df[feature] = pd.Series([meta.categorical_features[feature][f] for f in max_indices], index=data.index)
+            #df[feature] = reduce(lambda x,y: x+y, (data[feature+'_'+str(label)].map(lambda x: ['', str(label)][x]) for label in meta.categorical_features[feature]))
+        continuous = list(meta.feature_names - meta.categorical_features.keys())
+        df[continuous] = data[continuous]
+        return df[meta.data.keys()]
 
     def explain_instance(self, instance, num_features=10):
-        instance = preprocessing.lime_preprocess_dataset(instance, self.categorical_features, self.data_keys).iloc[0]
-        self.explanation = self.explainer.explain_instance(instance, self.predict_fn.predict_proba,
+        instance = self.transform_dataset(instance, self.data).iloc[0]
+        self.explanation = self.explainer.explain_instance(instance, lambda x: self.predict(self.inverse_transform_dataset(pd.DataFrame(x, columns=self.train.keys()), self.data)),
                                                            num_features=num_features)
         self.instance = instance
         self.weighted_instances = self.get_weighted_instances()
@@ -71,8 +110,9 @@ class LimeExplainer(Explainer):
         explainer and the ML model
         """
 
-        ml_preds = self.predict_fn.predict_proba(self.train)[:, 1]
-        ml_preds = ml_preds > 0.5
+        ml_preds = self.predict(self.inverse_transform_dataset(self.train, self.data))
+        print(ml_preds)
+        ml_preds = ml_preds[:,0] > 0.5
         exp_preds = [self.predict_instance_surrogate(instance) for instance, _ in self.weighted_instances]
         exp_preds = np.array(exp_preds) > 0.5
         return (ml_preds == exp_preds).sum() / len(exp_preds)
