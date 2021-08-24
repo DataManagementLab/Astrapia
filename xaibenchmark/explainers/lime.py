@@ -9,7 +9,7 @@ import lime.lime_tabular
 
 class LimeExplainer(Explainer):
 
-    def __init__(self, data, predict_fn, categorical_features=None, discretize_continuous=True):
+    def __init__(self, data, predict_fn, discretize_continuous=True):
 
         self.categorical_features = data.categorical_features
         self.data_keys = data.data.keys()
