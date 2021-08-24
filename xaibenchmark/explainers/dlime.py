@@ -45,3 +45,65 @@ class DLimeExplainer(Explainer):
                                                                              clustered_data=subset,
                                                                              regressor='linear',
                                                                              labels=(0, 1))
+        return self.explanation
+
+    @xb.metric
+    def absolute_area(self):
+        """
+        Area that is covered by the kernel in high dimension of the feature space.
+        """
+        kernel_width = np.sqrt(self.train.shape[1]) * .75
+        kernel_dimension = self.train.shape[1]
+        return (kernel_width * np.sqrt(2 * np.pi)) ** kernel_dimension
+
+    @xb.metric
+    def coverage(self):
+        pass
+
+    @xb.metric
+    def furthest_distance(self):
+        kernel_width = np.sqrt(self.train.shape[1]) * .75
+
+        def kernel(distance):
+            return np.sqrt(np.exp(-distance ** 2 / kernel_width ** 2))
+
+        training_instances = self.train.to_numpy()
+        distance_instances = (self.distance(self.instance, instance) for instance in training_instances)
+        weighted_distances = (distance * kernel(distance) for distance in distance_instances)
+        return sum(weighted_distances)
+
+    @xb.metric
+    def accuracy(self):
+        """
+        Proportion of instances in the explanation neighborhood that shares the same output label by the
+        explainer and the ML model
+        """
+        ml_preds = self.predict_fn.predict_proba(self.train)[:, 1]
+        ml_preds = ml_preds > 0.5
+        exp_preds = [self.predict_instance_surrogate(instance) for instance, _ in self.weighted_instances]
+        exp_preds = np.array(exp_preds) > 0.5
+        return (ml_preds == exp_preds).sum() / len(exp_preds)
+
+    @xb.metric
+    def balance_explanation(self):
+        pass
+
+    @xb.utility
+    def distance(self, x, y):
+        return np.linalg.norm(x - y)
+
+    @xb.utility
+    def get_weighted_instances(self):
+        pass
+
+    @xb.utility
+    def get_explained_instance(self):
+        return self.instance
+
+    @xb.utility
+    def get_training_data(self):
+        return self.train
+
+    @xb.utility
+    def predict_instance_surrogate(self, instance):
+        pass
