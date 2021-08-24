@@ -16,22 +16,20 @@ def model_properties( y_test, modelpredictions, labels=[]):
         return metrics.classification_report(y_test, modelpredictions, labels=labels, output_dict=True)
 
 
-def normalize(lst):
-    # TODO there needs to be more work done here, metrics are currently normalized using all metrics from one explainer,
-    #  instead of the same metrics from different explainers
-    """
-    Returns a sorted list of tuple (metric, value). Used to normalize non-relative metrics that is out of range [0,1].
-    """
-    new_lst = []
-    max_val = max([i for _, i in lst])
-    min_val = min([i for _, i in lst])
-    for metric, score in lst:
-        if not 0 <= score <= 1:
-            temp = (score - min_val) / (max_val - min_val)
-            new_lst.append((metric, round(temp, 4)))
-        else:
-            new_lst.append((metric, round(score, 4)))
-    return sorted(new_lst, key=lambda x: x[0])
+# def normalize(lst):
+#     """
+#     Returns a sorted list of tuple (metric, value). Used to normalize non-relative metrics that is out of range [0,1].
+#     """
+#     new_lst = []
+#     max_val = max([i for _, i in lst])
+#     min_val = min([i for _, i in lst])
+#     for metric, score in lst:
+#         if not 0 <= score <= 1:
+#             temp = (score - min_val) / (max_val - min_val)
+#             new_lst.append((metric, round(temp, 4)))
+#         else:
+#             new_lst.append((metric, round(score, 4)))
+#     return sorted(new_lst, key=lambda x: x[0])
 
 
 def normalize2(dicts):

@@ -122,7 +122,7 @@ class AnchorsExplainer(Explainer):
                 return np.mean(self.predictor.predict(relevant_examples))
 
     @xb.metric
-    def area(self):
+    def relative_area(self):
         """
         Relative amount of feature space over all features n that is specified by the explanation.
         area = Product[i=1->n] fi, f: 1 if feature is not in explanation, else 1/m, m: deminsionality of feature
