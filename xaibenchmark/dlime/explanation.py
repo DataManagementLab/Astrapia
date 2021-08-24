@@ -1,7 +1,6 @@
 import string
 import matplotlib.pyplot as plt
 import numpy as np
-from utils import InvalidExplanationMode
 
 
 def id_generator(size=15, random_state=None):
@@ -122,6 +121,6 @@ class Explanation(object):
         plt.title(title)
         #plt.suptitle('Sup title', y=1.05, fontsize=18)
         #plt.savefig(str(name) + ".png")
-        filename= 'results/' + str(name)+".pdf"
-        plt.savefig(filename, bbox_inches='tight')
+        # filename= 'results/' + str(name)+".pdf"
+        # plt.savefig(filename, bbox_inches='tight')
         return fig, names

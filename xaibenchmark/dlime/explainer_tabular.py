@@ -6,13 +6,15 @@ import warnings
 import numpy as np
 import sklearn
 import sklearn.preprocessing
+from xaibenchmark.dlime import explanation
+from xaibenchmark.dlime import explainer_base
+import sklearn.tree
 from sklearn.utils import check_random_state
-from discretize import QuartileDiscretizer
-from discretize import DecileDiscretizer
-from discretize import EntropyDiscretizer
-from discretize import BaseDiscretizer
-import explanation
-import explainer_base
+from xaibenchmark.dlime.discretize import QuartileDiscretizer
+from xaibenchmark.dlime.discretize import DecileDiscretizer
+from xaibenchmark.dlime.discretize import EntropyDiscretizer
+from xaibenchmark.dlime.discretize import BaseDiscretizer
+
 
 class TableDomainMapper(explanation.DomainMapper):
     def __init__(self, feature_names, feature_values, scaled_row,
