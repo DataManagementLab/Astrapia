@@ -3,6 +3,7 @@ import json
 import pandas as pd
 from sklearn.utils import Bunch
 from numpy.random import RandomState
+from xaibenchmark.dataset import Dataset
 
 
 def load_csv_data(dataset_name, root_path='data', seed=0):
@@ -45,7 +46,7 @@ def load_csv_data(dataset_name, root_path='data', seed=0):
     names.remove(meta['target'])
 
     # Return the Bunch with the appropriate data chunked apart
-    return Bunch(
+    return Dataset(
         name=dataset_name,
         data=train[names],
         target=pd.DataFrame(train[meta['target']]),
