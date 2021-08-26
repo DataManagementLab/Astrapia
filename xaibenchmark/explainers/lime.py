@@ -33,16 +33,7 @@ class LimeExplainer(Explainer):
 
     def transform_dataset(self, data: pd.DataFrame, meta: xb.Dataset) -> any:
 
-        transformed_df = pd.DataFrame(index=data.index)
-
-        for feature in set(data.columns) - set(meta.categorical_features):
-            transformed_df[feature] = data[feature]
-
-        for feature in meta.categorical_features:
-            for label in meta.categorical_features[feature]:
-                transformed_df[feature+'_'+str(label)] = (data[feature]==label).astype(int)
-
-        return transformed_df
+        return xb.utils.onehot_encode(data, meta)
 
     def inverse_transform_dataset(self, data: pd.DataFrame, meta: xb.Dataset):
         """
@@ -111,7 +102,6 @@ class LimeExplainer(Explainer):
         """
 
         ml_preds = self.predict(self.inverse_transform_dataset(self.train, self.data))
-        print(ml_preds)
         ml_preds = ml_preds[:,0] > 0.5
         exp_preds = [self.predict_instance_surrogate(instance) for instance, _ in self.weighted_instances]
         exp_preds = np.array(exp_preds) > 0.5
