@@ -82,6 +82,14 @@ class AnchorsExplainer(Explainer):
         #self.instance_set, self.instance_label_set = self.get_subset(instance_set)
         return self.explanation
 
+    @xb.prop
+    def shape(self):
+        return 'Hyperrectangle'
+
+    @xb.prop
+    def name(self):
+        return 'Not Lime'
+
     @xb.metric
     def coverage(self):
         """

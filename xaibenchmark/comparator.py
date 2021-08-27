@@ -54,11 +54,10 @@ class ExplainerComparator:
             # iterate over all instances
             for index in range(0, instances.shape[0]):
                 explanation = explainer.explain_instance(instances.iloc[[index]])
-                explainer.report()
-                explainer.infer_metrics(printing=False)
+                #explainer.infer_metrics(printing=False)  TODO: optional parameter
 
                 explanation_metrics = {}
-                for (metric, value) in explainer.report():
+                for (metric, value) in explainer.report(tag='metric'):
                     # add up metrics in order to compute average values later
                     explainer_average_metrics[metric] += value
                     # save metrics of the explanation separately

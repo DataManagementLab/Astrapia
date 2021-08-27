@@ -65,6 +65,14 @@ class LimeExplainer(Explainer):
 
         return self.explanation
 
+    @xb.prop
+    def shape(self):
+        return 'Exponential kernel'
+
+    @xb.prop
+    def name(self):
+        return 'Lime'
+
     @xb.metric
     def absolute_area(self):
         """

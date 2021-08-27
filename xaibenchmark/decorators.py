@@ -26,3 +26,17 @@ def utility(fn):
         return result
     wrapper.tag = 'utility'
     return wrapper
+
+def prop(fn):
+    """Decorator for tagging explainer properties.
+
+    Explainer property to describe the properties of a explainers.   
+    """
+    # mark the method as something that can be used to infer metrics
+    def wrapper(*args):
+        result = fn(*args)
+        if result is None:
+            return float('nan')
+        return result
+    wrapper.tag = 'prop'
+    return wrapper

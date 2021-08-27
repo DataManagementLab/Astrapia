@@ -55,6 +55,14 @@ class Explainer:
         :return: a list of metrics
         """
         return [x for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'metric']
+
+    def props(self) -> list:
+        """
+        Returns a list of properties that are available for this explainer
+
+        :return: a list of properties
+        """
+        return [x for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'prop']
     
     def infer_metrics(self, printing:bool=True) -> None:
         """
@@ -69,15 +77,24 @@ class Explainer:
         if printing:
             print('inferred metrics:', {x for x in dir(self) if getattr(getattr(self, x), 'tag', None) in ['metric', 'utility']})
         
-    def report(self) -> dict:
+    def report(self, tag = None) -> dict:
         """
-        Compute and print metrics for this explainer
+        Compute and print metrics for this explainer and the properties
 
         :return: a dictionary of metrics
         """
-        all_mu_identifier_references = {(x, getattr(self, x)) for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'metric'}
+        if tag is None:
+            all_mu_identifier_references = {(x, getattr(self, x)) for x in dir(self) if getattr(getattr(self, x), 'tag', None) in ['metric', 'prop']}
+        elif tag == 'metric':
+            all_mu_identifier_references = {(x, getattr(self, x)) for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'metric'}
+        elif tag == 'prop':
+            all_mu_identifier_references = {(x, getattr(self, x)) for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'prop'}
+        else:
+            raise ValueError(f'Tag should be either "metric" or "prop", not ${tag}')
+            
         implemented_mu_values = {(x, f()) for (x, f) in all_mu_identifier_references}
         return implemented_mu_values
+
 
 
 
