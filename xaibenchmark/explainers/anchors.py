@@ -10,41 +10,62 @@ from xaibenchmark import preprocessing
 from xaibenchmark import Explainer
 import xaibenchmark as xb
 
+import pandas as pd
+from lime.lime_tabular import QuartileDiscretizer
+
 
 class AnchorsExplainer(Explainer):
     """
     implementation of the Explainer "Anchors" onto the base explainer class
     """
 
-    def __init__(self, predictor, dataset_folder, dataset_name):
+    def __init__(self, data, predict_fn):
 
-        dataset = utils.load_dataset(dataset_name, balance=True, dataset_folder=dataset_folder, discretize=True)
-        self.rawdata = load_adult.load_csv_data(dataset_name, root_path=dataset_folder)
+        #dataset = utils.load_dataset(dataset_name, balance=True, dataset_folder=dataset_folder, discretize=True)
+        #self.rawdata = load_adult.load_csv_data(dataset_name, root_path=dataset_folder)
+
+        # TODO: Implement Transformations
+
+        self.anchors_dataset = self.transform_dataset(data.data, data)
 
         self.explainer = anchor_tabular.AnchorTabularExplainer(
-            dataset.class_names,
-            dataset.feature_names,
-            dataset.train,
-            dataset.categorical_names)
-        self.dataset = dataset
-        self.predictor = predictor
+            self.anchors_dataset['class_names'],
+            self.anchors_dataset['feature_names'],
+            self.anchors_dataset['data'],
+            self.anchors_dataset['categorical_names'])
+        self.meta = data
+        
+        def transformed_predict(data):
+            return predict_fn(self.inverse_transform_dataset({'data': data}, self.meta))
+        self.predictor = transformed_predict
+        
+        #self.predictor = 
+        #predict_fn
 
-    def get_subset(self, subset_name):
-        """
-        Returns one of the 3 subsets given a name
-        :param subset_name: either train, dev or test
-        :return: data subset as ndarray
-        """
-        if subset_name == "train":
-            return self.dataset.train, self.dataset.labels_train
-        elif subset_name == "dev":
-            return self.dataset.validation, self.dataset.labels_validation
-        elif subset_name == "test":
-            return self.dataset.test, self.dataset.labels_test
-        else:
-            raise NameError("This subset name is not one of train, dev, test.")
+    def transform_dataset(self, data: pd.DataFrame, meta: xb.Dataset) -> any:
+        result = {
+            'labels': (meta.target == meta.target_names[-1]).astype(int).to_numpy().reshape((-1,)),
+            'class_names': meta.target_names,
+            'ordinal_features': [i for i, label in (enumerate(meta.feature_names)) if label not in meta.categorical_features.keys()],
+            'categorical_features': [i for i, label in (enumerate(meta.feature_names)) if label in meta.categorical_features.keys()],
+            'categorical_names': {idx: [str(x) for x in meta.categorical_features[feature]] for idx, feature in enumerate(meta.feature_names) if feature in meta.categorical_features},
+            'feature_names': meta.feature_names,
+            'data': data.to_numpy()
+        }
+        
+        for feature_idx in result['categorical_features']:
+            feature_map = {feature: idx for idx, feature in enumerate(result['categorical_names'][feature_idx])}
+            result['data'][:, feature_idx] = np.vectorize(lambda x: feature_map[str(x)])(result['data'][:, feature_idx])
 
-    def explain_instance(self, instance, instance_set="train", threshold=0.70):
+        return result
+
+    def inverse_transform_dataset(self, data: any, meta: xb.Dataset) -> pd.DataFrame:
+        df = pd.DataFrame(data['data'], columns=meta.feature_names)
+        for feature_idx in [i for i, label in (enumerate(meta.data.keys())) if label in meta.categorical_features.keys()]:
+            df[meta.feature_names[feature_idx]] = df[meta.feature_names[feature_idx]].map(lambda entry: meta.categorical_features[meta.feature_names[feature_idx]][entry])
+        return df
+
+    def explain_instance(self, instance, threshold=0.70):
         """
         Creates an Anchor explanation based on a given instance
         :param instance: "Anchor" for explanation
@@ -53,11 +74,12 @@ class AnchorsExplainer(Explainer):
         :return: the explanation
         """
 
-        instance = preprocessing.anchors_preprocess_instance(self.rawdata.data.append(instance, ignore_index=True).to_numpy())
+        #instance = preprocessing.anchors_preprocess_instance(self.rawdata.data.append(instance, ignore_index=True).to_numpy())
+        instance = self.transform_dataset(instance, self.meta)
 
-        self.explanation = self.explainer.explain_instance(instance, self.predictor.predict, threshold=threshold)
-        self.instance = instance
-        self.instance_set, self.instance_label_set = self.get_subset(instance_set)
+        self.explanation = self.explainer.explain_instance(instance['data'][0], self.predictor, threshold=threshold)
+        self.instance = instance['data'][0]
+        #self.instance_set, self.instance_label_set = self.get_subset(instance_set)
         return self.explanation
 
     @xb.metric
@@ -90,62 +112,44 @@ class AnchorsExplainer(Explainer):
         """
         # balance is always 0 or 1 because Anchors creates a neighborhood where all elements are supposed to have
         # the same label as the one that was used to instantiate the explanation
-        return self.explanation.exp_map["prediction"]
+        return 0 if self.explanation.exp_map["prediction"] == self.meta.target_names[0] else 1
 
     @xb.metric
-    def balance_data(self, dataset=None, labelset=None):
+    def balance_model(self):
         """
         Relative amount of data elements in the given set or set of the original instance with a label value of 1
         :return: the balance value
         """
         if hasattr(self, 'explanation'):
-            if (dataset is None) ^ (labelset is None):
-                raise NameError("Either declare dataset and labelset or none of them")
-            elif dataset is None:
-                dataset = self.instance_set
-                labelset = self.instance_label_set
-            return np.mean(labelset[self.get_fit_anchor(dataset)])
+            pred = self.predictor(self.anchors_dataset['data'])
+            self.p = pred
+            return np.mean(pred[self.get_fit_anchor(self.anchors_dataset['data'])] == self.meta.target_names[1])
 
     @xb.metric
-    def balance_model(self, dataset=None):
-        """
-        Relative amount of data elements in the neighborhood of the explanation or the given set
-        with an assigned label (by the ML model) value of 1
-        """
-        if hasattr(self, 'explanation'):
-            if dataset is None:
-                dataset = self.instance_set
-            relevant_examples = dataset[self.get_fit_anchor(dataset)]
-            if len(relevant_examples) > 0:
-                return np.mean(self.predictor.predict(relevant_examples))
-
-    @xb.metric
-    def area(self):
+    def relative_area(self):
         """
         Relative amount of feature space over all features n that is specified by the explanation.
         area = Product[i=1->n] fi, f: 1 if feature is not in explanation, else 1/m, m: deminsionality of feature
         :return: the area value
         """
         if hasattr(self, 'explanation'):
-            array = np.amax(self.dataset.train, axis=0)[self.explanation.features()]
+            array = np.amax(self.anchors_dataset['data'], axis=0)[self.explanation.features()]
             array = array + 1
             return np.prod(1 / array)
         return np.nan
 
     @xb.metric
-    def accuracy(self, dataset=None):
+    def accuracy(self):
         """
         Relative amount of data elements in explanation neighborhood or given dataset that have the same explanation
         label as the label assigned by the ML model
         :return: the accuracy value
         """
         if hasattr(self, 'explanation'):
-            if dataset is None:
-                dataset = self.instance_set
             explanation_label = self.explanation.exp_map["prediction"]
-            relevant_examples = dataset[self.get_fit_anchor(dataset)]
+            relevant_examples = self.anchors_dataset['data'][self.get_fit_anchor(self.anchors_dataset['data'])]
             if len(relevant_examples) > 0:
-                ml_pred = self.predictor.predict(relevant_examples)
+                ml_pred = self.predictor(relevant_examples)
                 return np.count_nonzero(ml_pred == explanation_label) / len(relevant_examples)
 
     @xb.utility
