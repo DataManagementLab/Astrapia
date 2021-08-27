@@ -66,7 +66,7 @@ class LimeExplainer(Explainer):
         return self.explanation
 
     @xb.metric
-    def area(self):
+    def absolute_area(self):
         """
         Area that is covered by the kernel in high dimension of the feature space.
         """
@@ -108,7 +108,7 @@ class LimeExplainer(Explainer):
         return (ml_preds == exp_preds).sum() / len(exp_preds)
 
     @xb.metric
-    def balance(self):
+    def balance_explanation(self):
         """
         Proportion of instances in the explanation neighborhood that has been assigned label 1 by the
         explanation model

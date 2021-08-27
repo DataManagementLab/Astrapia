@@ -1,5 +1,9 @@
 from collections import defaultdict
 from xaibenchmark.samplers import base_sampler, random, splime
+from xaibenchmark.utils import normalize2
+from xaibenchmark.utils import fill_in_value
+import plotly.graph_objects as go
+
 
 class ExplainerComparator:
 
@@ -107,25 +111,86 @@ class ExplainerComparator:
         return self.explain_instances(instances)
         
 
-    def print_metrics(self, explainer=None, index=None):
+    def print_metrics(self, explainer=None, index=None, plot=None):
         """
         Output metrics of the explanations on the console. Either averaged metrics or metrics from single explanations
         :param explainer: Optional, in case you only want metrics from one explainer
         :param index: Optional, in case you only want metrics from one explanation
+        :param plot: Optional. Visualize the metrics in bar chart or table form. Options: 'bar' or 'table'
         """
+
+        assert plot is None or plot == 'bar' or plot == 'table', 'Wrong input. Check again.'
+
         if explainer is not None:
             if index is not None:
                 output = self.metrics[explainer][index]
-                print("Metric values for explainer", explainer,
-                      ", explanation created with the", index, "-th instance of the given data")
+                header = "Metrics of the explanation with index " + str(index) + " from explainer " + explainer
             else:
                 output = self.averaged_metrics[explainer]
-                print("Average metric values for the explainer", explainer, ":")
-            for metric, value in output.items():
-                print("\t", metric, ":", value)
+                header = "Average Metrics from explainer " + explainer
+
+            pair = sorted(list(zip(output.keys(), output.values())), key=lambda tup: tup[0])
+
+            if plot == 'table':
+                fig = go.Figure(data=[go.Table(
+                    header=dict(values=['metric', 'value'],
+                                line_color='#bfbfbf',
+                                fill_color='#e0e5df',
+                                align='left'),
+                    cells=dict(values=[[metric for metric, _ in pair],  # 1st column
+                                       [round(value, 6) for _, value in pair]],  # 2nd column
+                               line_color='#bfbfbf',
+                               fill_color='#e0e5df',
+                               align='left'))
+                ])
+                fig.update_layout(title_text=header)
+                fig.show()
+
+            elif plot == 'bar':
+                normalized_pair = [(metric, value) for (metric, value) in pair if 0 <= value <= 1]
+                fig = go.Figure([go.Bar(x=[metric for metric, _ in normalized_pair],
+                                        y=[value for _, value in normalized_pair],
+                                        text=[value for _, value in normalized_pair])])
+                fig.update_layout(title_text=header,
+                                  plot_bgcolor='#fffaf4')
+                fig.show()
 
         else:
-            for name, metrics in self.averaged_metrics.items():
-                print("Average metric values for explainer", name, ":")
-                for metric, value in metrics.items():
-                    print("\t", metric, ":", value)
+            if plot == 'table':
+                allexplainers = [x.keys() for x in self.averaged_metrics.values()]
+                allmetrics = sorted(list(set([item for sublist in allexplainers for item in sublist])))
+
+                headline = ['Metric']
+                values = []
+
+                for name, metrics in self.averaged_metrics.items():
+                    headline += [name]
+                    explainer_values = [fill_in_value(metrics, metric) for metric in allmetrics]
+                    values.append(explainer_values)
+
+                fig = go.Figure(data=[go.Table(
+                    header=dict(values=headline,
+                                line_color='#bfbfbf',
+                                fill_color='#e0e5df',
+                                align='left'),
+                    cells=dict(values=[allmetrics] + values,  # 2nd column
+                               line_color='#bfbfbf',
+                               fill_color='#e0e5df',
+                               align='left'))
+                ])
+                fig.update_layout(title_text=f'Metrics from all explainers')
+                fig.show()
+
+            elif plot == 'bar':
+                normalized2_metrics = [(name, sorted(list(zip(metrics.keys(), metrics.values())), key=lambda tup: tup[0]))
+                                       for name, metrics in normalize2(self.averaged_metrics).items()]
+
+                fig = go.Figure(data=[go.Bar(name=name,
+                                             x=[metric for metric, _ in normalized_pair],
+                                             y=[value for _, value in normalized_pair],
+                                             text=[value for _, value in normalized_pair])
+                                      for (name, normalized_pair) in normalized2_metrics])
+                fig.update_layout(barmode='group', title_text=f'Metric Comparison',
+                                  plot_bgcolor='#ececea')
+                fig.show()
+
