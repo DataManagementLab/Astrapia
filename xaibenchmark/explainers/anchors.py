@@ -112,7 +112,6 @@ class AnchorsExplainer(Explainer):
     @xb.metric
     def balance_explanation(self):
         """
-        New implementation of balance:
         Relative amount of data elements in the explanation neighborhood that had an assigned label value of 1
         (by the explanation)
         :return: the balance value
@@ -124,13 +123,23 @@ class AnchorsExplainer(Explainer):
     @xb.metric
     def balance_model(self):
         """
-        Relative amount of data elements in the given set or set of the original instance with a label value of 1
+        Relative amount of data elements in the neighborhood of the explanation that had a label value of 1 assigned
+        by the classification model
         :return: the balance value
         """
         if hasattr(self, 'explanation'):
             pred = self.predictor(self.anchors_dataset['data'])
             self.p = pred
             return np.mean(pred[self.get_fit_anchor(self.anchors_dataset['data'])] == self.meta.target_names[1])
+
+    @xb.metric
+    def balance_data(self):
+        """
+        Relative amount of data elements in the neighborhood of the explanation with a label value of 1
+        :return: the balance value
+        """
+        if hasattr(self, 'explanation'):
+            return np.mean(self.anchors_dataset['labels'][self.get_fit_anchor(self.anchors_dataset['data'])])
 
     @xb.metric
     def relative_area(self):
