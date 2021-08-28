@@ -64,7 +64,7 @@ class Explainer:
         """
         return [x for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'prop']
     
-    def infer_metrics(self, printing:bool=True) -> None:
+    def infer_metrics(self, printing: bool = True) -> None:
         """
         Infer missing metrics for this explainer.
         Metrics are inferred using the transfer graph.
