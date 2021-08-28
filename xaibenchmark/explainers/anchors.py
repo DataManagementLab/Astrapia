@@ -19,7 +19,7 @@ class AnchorsExplainer(Explainer):
     implementation of the Explainer "Anchors" onto the base explainer class
     """
 
-    def __init__(self, data, predict_fn):
+    def __init__(self, data, predict_fn, min_precision=0.9):
 
         #dataset = utils.load_dataset(dataset_name, balance=True, dataset_folder=dataset_folder, discretize=True)
         #self.rawdata = load_adult.load_csv_data(dataset_name, root_path=dataset_folder)
@@ -27,6 +27,7 @@ class AnchorsExplainer(Explainer):
         # TODO: Implement Transformations
 
         self.anchors_dataset = self.transform_dataset(data.data, data)
+        self.min_precision = min_precision
 
         self.explainer = anchor_tabular.AnchorTabularExplainer(
             self.anchors_dataset['class_names'],
@@ -38,9 +39,7 @@ class AnchorsExplainer(Explainer):
         def transformed_predict(data):
             return predict_fn(self.inverse_transform_dataset({'data': data}, self.meta))
         self.predictor = transformed_predict
-        
-        #self.predictor = 
-        #predict_fn
+
 
     def transform_dataset(self, data: pd.DataFrame, meta: xb.Dataset) -> any:
         result = {
@@ -65,7 +64,7 @@ class AnchorsExplainer(Explainer):
             df[meta.feature_names[feature_idx]] = df[meta.feature_names[feature_idx]].map(lambda entry: meta.categorical_features[meta.feature_names[feature_idx]][entry])
         return df
 
-    def explain_instance(self, instance, threshold=0.70):
+    def explain_instance(self, instance):
         """
         Creates an Anchor explanation based on a given instance
         :param instance: "Anchor" for explanation
@@ -77,7 +76,7 @@ class AnchorsExplainer(Explainer):
         #instance = preprocessing.anchors_preprocess_instance(self.rawdata.data.append(instance, ignore_index=True).to_numpy())
         instance = self.transform_dataset(instance, self.meta)
 
-        self.explanation = self.explainer.explain_instance(instance['data'][0], self.predictor, threshold=threshold)
+        self.explanation = self.explainer.explain_instance(instance['data'][0], self.predictor, threshold=self.min_precision)
         self.instance = instance['data'][0]
         #self.instance_set, self.instance_label_set = self.get_subset(instance_set)
         return self.explanation
