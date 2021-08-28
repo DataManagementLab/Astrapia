@@ -2,7 +2,30 @@
 Explainers
 *******************
 Explainers are used to explain the behavour of an arbitrary machine learning model.
-This class wraps explainers to unify their interfaces and allow for comparison.
+
+.. py:class:: Explainer
+
+    The Explainer class wraps an explainer and provides a unified interface for it. 
+    Initialization depends on the specific explainer. 
+    This class should *not* be used as is but rather extended.
+
+    .. py:method:: metrics()
+
+        Returns a list of implemented metrics
+
+    .. py:method:: props()
+
+        Returns a list of implemented properties
+
+    .. py:method:: infer_metrics(printing=True)
+
+        Uses transfer_ to infer additional metrics
+
+    .. py:method:: report(tag=None)
+
+        Returns a dictionary of metric and property names and their values. 
+        If a tag ('metric' or 'prop') is supplied, only the corresponding type of attribute is reported.
+
 
 Preimplemented Explainers
 ======================================
@@ -92,7 +115,7 @@ the meta information (such as a list of categorical features) can be very useful
     Translates a dataset into the astrapia dataset format.
 
 
-Reference
+Metric and Property Reference
 =======================================
 The following metrics are supported by default. 
 By following them, you can be sure that pre-implemented 
