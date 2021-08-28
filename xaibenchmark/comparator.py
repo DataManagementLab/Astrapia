@@ -1,10 +1,14 @@
 from collections import defaultdict
 from xaibenchmark.samplers import base_sampler, random, splime
-from xaibenchmark.utils import normalize, fill_in_value, norm_balance
-import plotly.graph_objects as go
+from datetime import datetime
+import json
 
 
 class ExplainerComparator:
+    """
+    A comparator that allows the user to add explainers, let them explain instances and store metrics from the
+    different explainers
+    """
 
     def __init__(self):
         # Dictionary with key: name of explainer, value: explainer as object
@@ -23,6 +27,9 @@ class ExplainerComparator:
 
         # instances that are used to create explanations
         self.instances = None
+
+        # timestamp of the creation of metrics
+        self.timestamp = ''
 
     def add_explainer(self, explainer, name):
         """
@@ -62,8 +69,8 @@ class ExplainerComparator:
                     # save metrics of the explanation separately
                     explanation_metrics[metric] = value
 
-                aggregated_explainer_metrics[index] = explanation_metrics
-                aggregated_explanations[index] = explanation
+                aggregated_explainer_metrics[str(index)] = explanation_metrics
+                aggregated_explanations[str(index)] = explanation
 
             # compute average metrics by dividing added metrics by the amount of provided instances
             explainer_average_metrics = {metric: value/instances.shape[0]
@@ -72,6 +79,7 @@ class ExplainerComparator:
             self.averaged_metrics[name] = explainer_average_metrics
             self.metrics[name] = aggregated_explainer_metrics
             self.explanations[name] = aggregated_explanations
+        self.timestamp = str(datetime.now())
 
     def explain_representative(self, data, sampler='random', count=10, verbose=False):
         """
@@ -108,128 +116,23 @@ class ExplainerComparator:
 
         return self.explain_instances(instances)
 
-    def print_metrics(self, explainer=None, index=None, plot='table', showMetricWithOneValue=True):
+    def store_metrics(self, filename='metrics'):
         """
-        Output metrics of the explanations on the console. Either averaged metrics or metrics from single explanations
-        :param explainer: Optional, in case you only want metrics from one explainer
-        :param index: Optional, in case you only want metrics from one explanation
-        :param plot: Optional. Visualize the metrics in bar chart or table form. Options: 'bar' or 'table'
-        :param showMetricWithOneValue:
+        Store metric data in a json file
+        :param filename: name of the file
+        :return: metric data as dictionary
         """
+        data = self.get_metric_data()
+        with open(filename + '.json', 'w') as outfile:
+            json.dump(data, outfile)
+        return data
 
-        assert plot == 'bar' or plot == 'table', 'Wrong input. Check again.'
+    def get_metric_data(self):
+        """
+        Get metric data including the timestamp of the creation of metrics
+        :return: metric data as dictionary
+        """
+        return {'timestamp': self.timestamp, 'explainers': list(self.explainers.keys()),
+                'averaged_metrics': self.averaged_metrics, 'separate_metrics': self.metrics}
 
-        if explainer is not None:
-            if index is not None:
-                output = self.metrics[explainer][index]
-                header = "Metrics of the explanation with index " + str(index) + " from explainer " + explainer
-            else:
-                output = self.averaged_metrics[explainer]
-                header = "Average Metrics from explainer " + explainer
-
-            pair = sorted(list(zip(output.keys(), output.values())), key=lambda tup: tup[0])
-
-            if plot == 'table':
-                fig = go.Figure(data=[go.Table(
-                    header=dict(values=['metric', 'value'],
-                                line_color='#bfbfbf',
-                                fill_color='#e0e5df',
-                                align='left'),
-                    cells=dict(values=[[metric for metric, _ in pair],  # 1st column
-                                       [round(value, 6) for _, value in pair]],  # 2nd column
-                               line_color='#bfbfbf',
-                               fill_color='#e0e5df',
-                               align='left'))
-                ])
-                fig.update_layout(title_text=header)
-                fig.show()
-
-            elif plot == 'bar':
-                normalized_pair = [norm_balance(metric, value) for (metric, value) in pair if 0 <= value <= 1]
-                fig = go.Figure([go.Bar(x=[metric for metric, _ in normalized_pair],
-                                        y=[value for _, value in normalized_pair],
-                                        text=[round(value, 3) for _, value in normalized_pair],
-                                        textposition='auto')])
-                fig.update_layout(title_text=header, plot_bgcolor='#fffaf4', height=600, margin=dict(l=20, r=20, t=60, b=200))
-                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.3, showarrow=False,
-                                        text="Non-relative metrics are not shown here because they cannot be compared",
-                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
-                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.35, showarrow=False,
-                                        text="with relative values in the same plot.",
-                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
-                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.4, showarrow=False,
-                                        text="Balance-related metrics were rescaled to display how close they are",
-                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
-                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.45, showarrow=False,
-                                        text="to 0.5, because that is the optimal balance value.",
-                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
-                fig.show()
-
-        else:
-            all_explainers = [x.keys() for x in self.averaged_metrics.values()]
-            relevant_metrics = sorted(list(set([item for sublist in all_explainers for item in sublist])))
-
-            if not showMetricWithOneValue:
-                filtered_metrics = []
-                for metric in relevant_metrics:
-                    count = 0
-                    for name, metrics in self.averaged_metrics.items():
-                        if metric in metrics:
-                            count += 1
-                    if count > 1:
-                        filtered_metrics.append(metric)
-                relevant_metrics = filtered_metrics
-
-            if plot == 'table':
-                headline = ['Metric']
-                values = []
-
-                for name, metrics in self.averaged_metrics.items():
-                    headline += [name]
-                    explainer_values = [fill_in_value(metrics, metric) for metric in relevant_metrics]
-                    values.append(explainer_values)
-
-                fig = go.Figure(data=[go.Table(
-                    header=dict(values=headline,
-                                line_color='#bfbfbf',
-                                fill_color='#e0e5df',
-                                align='left'),
-                    cells=dict(values=[relevant_metrics] + values,  # 2nd column
-                               line_color='#bfbfbf',
-                               fill_color='#e0e5df',
-                               align='left'))
-                ])
-                fig.update_layout(title_text=f'Metrics from all explainers')
-                fig.show()
-
-            elif plot == 'bar':
-                normalized_metrics = [(name, sorted(list(zip(metrics.keys(), metrics.values())), key=lambda tup: tup[0]))
-                                       for name, metrics in normalize(self.averaged_metrics, relevant_metrics).items()]
-
-                fig = go.Figure(data=[go.Bar(name=name,
-                                             x=[metric for metric, _ in normalized_pair],
-                                             y=[value for _, value in normalized_pair],
-                                             text=[round(value, 3) for _, value in normalized_pair],
-                                             textposition='auto')
-                                      for (name, normalized_pair) in normalized_metrics])
-                fig.update_layout(barmode='group', title_text=f'Metric Comparison', plot_bgcolor='#ececea',
-                                  height=600, margin=dict(l=20, r=20, t=60, b=200))
-
-                # add annotation
-                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.3, showarrow=False,
-                                        text="Non-relative metrics are normalized to be between 0 and 1. If there is",
-                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
-                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.35, showarrow=False,
-                                        text="only one value for a non-relative metric (in case metrics with only a",
-                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
-                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.4, showarrow=False,
-                                        text="single value are shown), then this metric is not visible.",
-                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
-                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.45, showarrow=False,
-                                        text="Balance-related metrics were rescaled to display how close they are",
-                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
-                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.5, showarrow=False,
-                                        text="to 0.5, because that is the optimal balance value.",
-                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
-                fig.show()
 
