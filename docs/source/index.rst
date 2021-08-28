@@ -27,6 +27,10 @@ Astrapia is **not** a framework for ranking explainers. It barely aids users in 
 Quickstart
 ====================================
 
+>>> test
+
+
+
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
