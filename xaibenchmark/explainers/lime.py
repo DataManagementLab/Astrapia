@@ -110,10 +110,11 @@ class LimeExplainer(Explainer):
         """
 
         ml_preds = self.predict(self.inverse_transform_dataset(self.train, self.data))
-        ml_preds = ml_preds[:,0] > 0.5
-        exp_preds = [self.predict_instance_surrogate(instance) for instance, _ in self.weighted_instances]
+        ml_preds = ml_preds[:,1] > 0.5
+        exp_preds = [self.predict_instance_surrogate(instance) for instance,_ in self.weighted_instances]
         exp_preds = np.array(exp_preds) > 0.5
-        return (ml_preds == exp_preds).sum() / len(exp_preds)
+        weights = np.array([weight for _, weight in self.weighted_instances])
+        return ((ml_preds == exp_preds) * weights).sum() / sum(weights)
 
     @xb.metric
     def balance_explanation(self):
