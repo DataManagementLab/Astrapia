@@ -79,7 +79,10 @@ def normalize(dicts, relevant_metrics):
         else:
             for name in dicts.keys():
                 if metric in dicts[name]:
-                    res[name][metric] = dicts[name][metric]
+                    if 'balance' in metric:
+                        res[name][metric] = 1 - 2 * abs(dicts[name][metric] - 0.5)
+                    else:
+                        res[name][metric] = dicts[name][metric]
     return res
 
 
@@ -88,3 +91,10 @@ def fill_in_value(metric_dict, metric):
         return round(metric_dict[metric], 6)
     else:
         return '-'
+
+
+def norm_balance(metric, value):
+    if 'balance' in metric:
+        return metric, 1 - 2 * abs(value - 0.5)
+    else:
+        return metric, value

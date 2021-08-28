@@ -1,7 +1,6 @@
 from collections import defaultdict
 from xaibenchmark.samplers import base_sampler, random, splime
-from xaibenchmark.utils import normalize
-from xaibenchmark.utils import fill_in_value
+from xaibenchmark.utils import normalize, fill_in_value, norm_balance
 import plotly.graph_objects as go
 
 
@@ -146,7 +145,7 @@ class ExplainerComparator:
                 fig.show()
 
             elif plot == 'bar':
-                normalized_pair = [(metric, value) for (metric, value) in pair if 0 <= value <= 1]
+                normalized_pair = [norm_balance(metric, value) for (metric, value) in pair if 0 <= value <= 1]
                 fig = go.Figure([go.Bar(x=[metric for metric, _ in normalized_pair],
                                         y=[value for _, value in normalized_pair],
                                         text=[round(value, 3) for _, value in normalized_pair],
@@ -157,6 +156,12 @@ class ExplainerComparator:
                                         textangle=0, xanchor='left', xref="paper", yref="paper"))
                 fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.35, showarrow=False,
                                         text="with relative values in the same plot.",
+                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
+                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.4, showarrow=False,
+                                        text="Balance-related metrics were rescaled to display how close they are",
+                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
+                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.45, showarrow=False,
+                                        text="to 0.5, because that is the optimal balance value.",
                                         textangle=0, xanchor='left', xref="paper", yref="paper"))
                 fig.show()
 
@@ -219,6 +224,12 @@ class ExplainerComparator:
                                         textangle=0, xanchor='left', xref="paper", yref="paper"))
                 fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.4, showarrow=False,
                                         text="single value are shown), then this metric is not visible.",
+                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
+                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.45, showarrow=False,
+                                        text="Balance-related metrics were rescaled to display how close they are",
+                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
+                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.5, showarrow=False,
+                                        text="to 0.5, because that is the optimal balance value.",
                                         textangle=0, xanchor='left', xref="paper", yref="paper"))
                 fig.show()
 
