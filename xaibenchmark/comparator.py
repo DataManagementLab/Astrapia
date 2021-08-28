@@ -1,6 +1,6 @@
 from collections import defaultdict
 from xaibenchmark.samplers import base_sampler, random, splime
-from xaibenchmark.utils import normalize2
+from xaibenchmark.utils import normalize
 from xaibenchmark.utils import fill_in_value
 import plotly.graph_objects as go
 
@@ -108,17 +108,17 @@ class ExplainerComparator:
             print(instances)
 
         return self.explain_instances(instances)
-        
 
-    def print_metrics(self, explainer=None, index=None, plot=None):
+    def print_metrics(self, explainer=None, index=None, plot='table', showMetricWithOneValue=True):
         """
         Output metrics of the explanations on the console. Either averaged metrics or metrics from single explanations
         :param explainer: Optional, in case you only want metrics from one explainer
         :param index: Optional, in case you only want metrics from one explanation
         :param plot: Optional. Visualize the metrics in bar chart or table form. Options: 'bar' or 'table'
+        :param showMetricWithOneValue:
         """
 
-        assert plot is None or plot == 'bar' or plot == 'table', 'Wrong input. Check again.'
+        assert plot == 'bar' or plot == 'table', 'Wrong input. Check again.'
 
         if explainer is not None:
             if index is not None:
@@ -149,22 +149,39 @@ class ExplainerComparator:
                 normalized_pair = [(metric, value) for (metric, value) in pair if 0 <= value <= 1]
                 fig = go.Figure([go.Bar(x=[metric for metric, _ in normalized_pair],
                                         y=[value for _, value in normalized_pair],
-                                        text=[value for _, value in normalized_pair])])
-                fig.update_layout(title_text=header,
-                                  plot_bgcolor='#fffaf4')
+                                        text=[round(value, 3) for _, value in normalized_pair],
+                                        textposition='auto')])
+                fig.update_layout(title_text=header, plot_bgcolor='#fffaf4', height=600, margin=dict(l=20, r=20, t=60, b=200))
+                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.3, showarrow=False,
+                                        text="Non-relative metrics are not shown here because they cannot be compared",
+                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
+                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.35, showarrow=False,
+                                        text="with relative values in the same plot.",
+                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
                 fig.show()
 
         else:
-            if plot == 'table':
-                allexplainers = [x.keys() for x in self.averaged_metrics.values()]
-                allmetrics = sorted(list(set([item for sublist in allexplainers for item in sublist])))
+            all_explainers = [x.keys() for x in self.averaged_metrics.values()]
+            relevant_metrics = sorted(list(set([item for sublist in all_explainers for item in sublist])))
 
+            if not showMetricWithOneValue:
+                filtered_metrics = []
+                for metric in relevant_metrics:
+                    count = 0
+                    for name, metrics in self.averaged_metrics.items():
+                        if metric in metrics:
+                            count += 1
+                    if count > 1:
+                        filtered_metrics.append(metric)
+                relevant_metrics = filtered_metrics
+
+            if plot == 'table':
                 headline = ['Metric']
                 values = []
 
                 for name, metrics in self.averaged_metrics.items():
                     headline += [name]
-                    explainer_values = [fill_in_value(metrics, metric) for metric in allmetrics]
+                    explainer_values = [fill_in_value(metrics, metric) for metric in relevant_metrics]
                     values.append(explainer_values)
 
                 fig = go.Figure(data=[go.Table(
@@ -172,7 +189,7 @@ class ExplainerComparator:
                                 line_color='#bfbfbf',
                                 fill_color='#e0e5df',
                                 align='left'),
-                    cells=dict(values=[allmetrics] + values,  # 2nd column
+                    cells=dict(values=[relevant_metrics] + values,  # 2nd column
                                line_color='#bfbfbf',
                                fill_color='#e0e5df',
                                align='left'))
@@ -181,15 +198,27 @@ class ExplainerComparator:
                 fig.show()
 
             elif plot == 'bar':
-                normalized2_metrics = [(name, sorted(list(zip(metrics.keys(), metrics.values())), key=lambda tup: tup[0]))
-                                       for name, metrics in normalize2(self.averaged_metrics).items()]
+                normalized_metrics = [(name, sorted(list(zip(metrics.keys(), metrics.values())), key=lambda tup: tup[0]))
+                                       for name, metrics in normalize(self.averaged_metrics, relevant_metrics).items()]
 
                 fig = go.Figure(data=[go.Bar(name=name,
                                              x=[metric for metric, _ in normalized_pair],
                                              y=[value for _, value in normalized_pair],
-                                             text=[value for _, value in normalized_pair])
-                                      for (name, normalized_pair) in normalized2_metrics])
-                fig.update_layout(barmode='group', title_text=f'Metric Comparison',
-                                  plot_bgcolor='#ececea')
+                                             text=[round(value, 3) for _, value in normalized_pair],
+                                             textposition='auto')
+                                      for (name, normalized_pair) in normalized_metrics])
+                fig.update_layout(barmode='group', title_text=f'Metric Comparison', plot_bgcolor='#ececea',
+                                  height=600, margin=dict(l=20, r=20, t=60, b=200))
+
+                # add annotation
+                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.3, showarrow=False,
+                                        text="Non-relative metrics are normalized to be between 0 and 1. If there is",
+                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
+                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.35, showarrow=False,
+                                        text="only one value for a non-relative metric (in case metrics with only a",
+                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
+                fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.4, showarrow=False,
+                                        text="single value are shown), then this metric is not visible.",
+                                        textangle=0, xanchor='left', xref="paper", yref="paper"))
                 fig.show()
 

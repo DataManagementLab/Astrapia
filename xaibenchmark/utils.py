@@ -53,29 +53,33 @@ def onehot_encode(data: pd.DataFrame, meta: xb.Dataset) -> any:
 #     return sorted(new_lst, key=lambda x: x[0])
 
 
-def normalize2(dicts):
-    res = copy.deepcopy(dicts)
+def normalize(dicts, relevant_metrics):
+    res = {name: {} for name, metrics in dicts.items()}
     criticalmetrics = []
     for name, metrics in dicts.items():
-        for k, v in metrics.items():
-            if not 0 <= v <= 1:
-                criticalmetrics.append(k)
+        for metric in relevant_metrics:
+            if metric in metrics:
+                if not 0 <= metrics[metric] <= 1:
+                    criticalmetrics.append(metric)
     criticalmetrics = list(set(criticalmetrics))
 
-    for crit in criticalmetrics:
-        currentvalues = []
-        for name, metrics in dicts.items():
-            if crit in metrics:
-                currentvalues.append((name, metrics[crit]))
+    for metric in relevant_metrics:
+        if metric in criticalmetrics:
+            currentvalues = []
+            for name, metrics in dicts.items():
+                if metric in metrics:
+                    currentvalues.append((name, metrics[metric]))
 
-        if len(currentvalues) == 1:
-            res[currentvalues[0][0]][crit] = 1
+            if len(currentvalues) > 1:
+                max_val = max([i for _, i in currentvalues])
+                min_val = min([i for _, i in currentvalues])
+                for name, value in currentvalues:
+                    res[name][metric] = (value - min_val) / (max_val - min_val)
+
         else:
-            max_val = max([i for _, i in currentvalues])
-            min_val = min([i for _, i in currentvalues])
-            for name, value in currentvalues:
-                res[name][crit] = (value - min_val) / (max_val - min_val)
-
+            for name in dicts.keys():
+                if metric in dicts[name]:
+                    res[name][metric] = dicts[name][metric]
     return res
 
 
