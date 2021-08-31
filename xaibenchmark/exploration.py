@@ -1,6 +1,3 @@
-from xaibenchmark import load_adult as la
-
-
 def basic_information(bunch):
     """
     Prints basic information on the data
@@ -77,16 +74,4 @@ def choose_dataset(bunch, dataset):
     if dataset == "test":
         return bunch.data_test
     raise NameError(dataset)
-
-
-
-if __name__ == "__main__":
-    # Example execution
-    # TODO move execution of data exploration to Jupyter notebook
-    test_data = la.load_csv_data('adult', root_path='../data')
-    basic_information(test_data)
-    print("\n")
-    feature_information(test_data, "age", "train")
-    print("\n")
-    feature_information(test_data, "education", "test")
 

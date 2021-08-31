@@ -189,7 +189,7 @@ def print_metrics(data, explainer=None, index=None, plot='table', show_metric_wi
                                     text="Balance-related metrics were rescaled to display how close they are",
                                     textangle=0, xanchor='left', xref="paper", yref="paper"))
             fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.45, showarrow=False,
-                                    text="to 0.5, because that is the optimal balance value.",
+                                    text="to 0.5, because that is the optimal balance value.<br> test",
                                     textangle=0, xanchor='left', xref="paper", yref="paper"))
             fig.show()
 
@@ -259,6 +259,6 @@ def print_metrics(data, explainer=None, index=None, plot='table', show_metric_wi
                                     text="Balance-related metrics were rescaled to display how close they are",
                                     textangle=0, xanchor='left', xref="paper", yref="paper"))
             fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.5, showarrow=False,
-                                    text="to 0.5, because that is the optimal balance value.",
+                                    text="to 0.5, because that is the optimal balance value.<br>test",
                                     textangle=0, xanchor='left', xref="paper", yref="paper"))
             fig.show()

@@ -4,10 +4,6 @@ def generate_default_transfer_functions(add_transfer):
         return area() ** (1 / len(get_explained_instance()))
     add_transfer(area_norm)
 
-    # def inverse_coverage(coverage):
-    #     return 1/coverage()
-    # add_transfer(inverse_coverage)
-
     def furthest_distance(distance, get_explained_instance, get_neighborhood_instance):
         return max(0, 0, *[distance(get_explained_instance(), i) for i in get_neighborhood_instance()])
     add_transfer(furthest_distance)

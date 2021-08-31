@@ -1,5 +1,3 @@
-
-
 def metric(fn):
     """Decorator for tagging metrics.
     
@@ -12,6 +10,7 @@ def metric(fn):
         return result
     wrapper.tag = 'metric'
     return wrapper
+
 
 def utility(fn):
     """Decorator for tagging utility functions.
@@ -26,6 +25,7 @@ def utility(fn):
         return result
     wrapper.tag = 'utility'
     return wrapper
+
 
 def prop(fn):
     """Decorator for tagging explainer properties.
