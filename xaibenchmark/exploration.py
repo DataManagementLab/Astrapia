@@ -74,4 +74,3 @@ def choose_dataset(bunch, dataset):
     if dataset == "test":
         return bunch.data_test
     raise NameError(dataset)
-

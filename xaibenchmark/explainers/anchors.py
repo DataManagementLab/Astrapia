@@ -91,7 +91,7 @@ class AnchorsExplainer(Explainer):
         return np.nan
 
     @xb.metric
-    def precision(self):
+    def accuracy_global(self):
         """
         The ML-accuracy of the explanation when applied to the whole dataset (not just the area of the explanation)
         :return: the precision value

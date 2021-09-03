@@ -98,6 +98,3 @@ class Dataset(Bunch):
             data_test=data_test,
             target_test=target_test
         )
-
-        
-
