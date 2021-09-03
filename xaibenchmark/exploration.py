@@ -1,10 +1,7 @@
-from xaibenchmark import load_adult as la
-
-
 def basic_information(bunch):
     """
     Prints basic information on the data
-    :param bunch: sk-learn Bunch object created by load_adult.py
+    :param bunch: sk-learn Bunch object
     """
     train_count = len(bunch.data)
     dev_count = len(bunch.data_dev)
@@ -21,7 +18,7 @@ def basic_information(bunch):
 def feature_information(bunch, feature, dataset="train"):
     """
     Prints information on the data specific to a feature of the dataset
-    :param bunch: sk-learn Bunch created by load_adult.py
+    :param bunch: sk-learn Bunch object
     :param feature: name of the desired feature
     :param dataset: either train, dev or test depending on which subset is relevant
     """
@@ -66,7 +63,7 @@ def feature_information(bunch, feature, dataset="train"):
 def choose_dataset(bunch, dataset):
     """
     Returns a desired subset of the given dataset
-    :param bunch: sk-learn Bunch created by load_adult.py
+    :param bunch: sk-learn Bunch
     :param dataset: String representation of subset, either train, dev or test
     :return: subset as pandas dataframe
     """
@@ -77,16 +74,3 @@ def choose_dataset(bunch, dataset):
     if dataset == "test":
         return bunch.data_test
     raise NameError(dataset)
-
-
-
-if __name__ == "__main__":
-    # Example execution
-    # TODO move execution of data exploration to Jupyter notebook
-    test_data = la.load_csv_data('adult', root_path='../data')
-    basic_information(test_data)
-    print("\n")
-    feature_information(test_data, "age", "train")
-    print("\n")
-    feature_information(test_data, "education", "test")
-

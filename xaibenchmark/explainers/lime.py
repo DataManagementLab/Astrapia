@@ -1,7 +1,4 @@
 import numpy as np
-from pandas.core.frame import DataFrame
-from pandas.core.series import Series
-from xaibenchmark import preprocessing
 from xaibenchmark import Explainer
 import xaibenchmark as xb
 import pandas as pd

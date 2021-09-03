@@ -1,8 +1,65 @@
-from typing import List
+import os
+import json
 import pandas as pd
-from typing import List, Union
 from sklearn.utils import Bunch
-import math
+from numpy.random import RandomState
+
+
+def load_csv_data(dataset_name, root_path='data', seed=0):
+    """
+    Parse a csv dataset to be used. This function assumes you have a folder $name under data, containing a file
+    $name.data with a comma-separated training set, and a JSON file containing feature names (amongst other info).
+
+    The default data directory ('data/') con be overwritten through the root_path parameter.
+    For exemplary data preparation, see data/adult/setup_adult.py
+
+    :param seed: RNG seed for numpyRandomState
+    :param dataset_name: name of the dataset, used for path/file names
+    :param root_path: path to the root data directory, defaults to 'data/'
+    :return: data as an sklearn Bunch
+    """
+    path = os.path.join(root_path, dataset_name)
+
+    # Load meta information
+    with open(os.path.join(path, 'meta.json'), 'r') as infile:
+        meta = json.load(infile)
+
+    names = meta['feature_names']  # just for convenience
+
+    # Load training data, splitting off dev set
+    train_dev_data = pd.read_csv(os.path.join(path, f'{dataset_name}.data'), names=names, skipinitialspace=True,
+                                 na_values=meta['na_values'])
+    rng = RandomState(seed) if seed else RandomState()
+    train = train_dev_data.sample(frac=0.7, random_state=rng)
+    dev = train_dev_data.loc[~train_dev_data.index.isin(train.index)]
+
+    # Load test data
+    test = pd.read_csv(os.path.join(path, f'{dataset_name}.test'), names=names, skipinitialspace=True,
+                       na_values=meta['na_values'])
+
+    # Remove the target from the categorical features if necessary
+    if meta['target_categorical']:
+        meta['categorical_features'].pop(meta['target'])
+
+    # Remove the target from feature name list
+    names.remove(meta['target'])
+
+    # Return the Bunch with the appropriate data chunked apart
+    return Dataset(
+        name=dataset_name,
+        data=train[names],
+        target=pd.DataFrame(train[meta['target']]),
+        data_dev=dev[names],
+        target_dev=pd.DataFrame(dev[meta['target']]),
+        data_test=test[names],
+        target_test=pd.DataFrame(test[meta['target']]),
+        target_name=meta['target'],
+        target_categorical=meta['target_categorical'],
+        target_names=meta['target_names'],
+        feature_names=meta['feature_names'],
+        categorical_features=meta['categorical_features'],
+    )
+
 
 class Dataset(Bunch):
 
@@ -41,63 +98,3 @@ class Dataset(Bunch):
             data_test=data_test,
             target_test=target_test
         )
-
-    def export_for_lime(self):
-        """
-        exports the dataset in a format readable by lime
-        """
-
-        def process_single(df):
-        
-            cat_df = pd.get_dummies(df, columns=self.categorical_features.keys())
-            missing_cols = {cat+'_'+str(attr) for cat in self.categorical_features \
-                            for attr in self.categorical_features[cat]} - set(cat_df.columns)
-            for c in missing_cols:
-                cat_df[c] = 0
-                
-            cont_idx = list(set(self.data.keys()) - set(self.categorical_features.keys()))
-            cat_idx = [cat+'_'+str(attr) for cat in self.categorical_features \
-                    for attr in self.categorical_features[cat]]
-            idx = cont_idx + cat_idx
-            return cat_df[idx]
-
-        return {
-            'data': process_single(self.data),
-            'feature_names': self.data.keys(),
-            'class_names': self.target_names
-        }
-
-    def export_for_anchors(self):
-        """
-        exports the dataset in a format readable by anchors
-        """
-
-        anchors_bunch = Bunch(
-            data=self.data.copy(),
-            data_dev=self.data_dev.copy(),
-            data_test=self.data_test.copy(),
-            target=self.target[self.target_name].map(lambda x: self.target_names.index(x)).to_numpy(),
-            #target=(ab.target_test['income']=='<=50K').map(int).to_numpy(),
-            target_dev=self.target_dev[self.target_name].map(lambda x: self.target_names.index(x)).to_numpy(),
-            target_test=self.target_test[self.target_name].map(lambda x: self.target_names.index(x)).to_numpy(),
-            target_names=self.target_names,
-            feature_names=self.feature_names,
-            categorical_features=self.categorical_features,
-            
-        )
-
-        for feature in anchors_bunch.categorical_features.keys():
-            def clearNan(x):
-                return None if (type(x)==float and math.isnan(x)) else x
-            transform = {clearNan(y): x for x, y in enumerate(anchors_bunch.categorical_features[feature])}
-            anchors_bunch.data[feature] = anchors_bunch.data[feature].map(lambda x: transform.get(clearNan(x)))
-            if anchors_bunch.data_dev is not None: anchors_bunch.data_dev[feature] = anchors_bunch.data_dev[feature].map(lambda x: transform.get(clearNan(x)))
-            if anchors_bunch.data_test is not None: anchors_bunch.data_test[feature] = anchors_bunch.data_test[feature].map(lambda x: transform.get(clearNan(x)))
-
-        for dataset in ['data', 'data_dev', 'data_test']:
-            anchors_bunch[dataset] = anchors_bunch[dataset].to_numpy()
-
-        return anchors_bunch
-
-        
-

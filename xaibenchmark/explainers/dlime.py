@@ -1,5 +1,4 @@
 import numpy as np
-from xaibenchmark import preprocessing
 from xaibenchmark.explainer import Explainer
 from xaibenchmark.dlime.explainer_tabular import LimeTabularExplainer
 import xaibenchmark as xb

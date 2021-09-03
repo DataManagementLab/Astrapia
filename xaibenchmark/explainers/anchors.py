@@ -1,17 +1,8 @@
 import numpy as np
-import xaibenchmark.utils as utils
-
 from anchor import anchor_tabular
-from anchor import utils
-
-from xaibenchmark import load_adult
-from xaibenchmark import preprocessing 
-
 from xaibenchmark import Explainer
 import xaibenchmark as xb
-
 import pandas as pd
-from lime.lime_tabular import QuartileDiscretizer
 
 
 class AnchorsExplainer(Explainer):
@@ -100,7 +91,7 @@ class AnchorsExplainer(Explainer):
         return np.nan
 
     @xb.metric
-    def precision(self):
+    def accuracy_global(self):
         """
         The ML-accuracy of the explanation when applied to the whole dataset (not just the area of the explanation)
         :return: the precision value
