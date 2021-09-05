@@ -12,14 +12,6 @@ class Explainer:
     When using the following predefined metrics and utilities, the library can infer other metrics by calling 
         your_explainer.infer_metrics()
 
-    Metrics:
-    - coverage(self)
-    - 
-
-    Utilities:
-    - distance(self, x, y)
-    - get_neighborhood_instances(self)
-    -
     """
     
     def __init__(self):
