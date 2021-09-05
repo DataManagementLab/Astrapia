@@ -1,7 +1,9 @@
 from collections import defaultdict
 from xaibenchmark.samplers import base_sampler, random, splime
+import xaibenchmark as xb
 from datetime import datetime
 import json
+from tqdm import tqdm
 
 
 class ExplainerComparator:
@@ -51,37 +53,43 @@ class ExplainerComparator:
         self.metrics = {}
         self.instances = instances
 
-        # Iterate over all explainers
-        for name, explainer in self.explainers.items():
-            explainer_average_metrics = defaultdict(float)
-            aggregated_explainer_metrics = {}
-            aggregated_explanations = {}
+        # Initilize tqdm progress bar
+        with tqdm(total=len(self.explainers.keys()) * len(instances)) as pbar:
 
-            # iterate over all instances
-            for index in range(0, instances.shape[0]):
-                explanation = explainer.explain_instance(instances.iloc[[index]])
-                #explainer.infer_metrics(printing=False)  TODO: optional parameter
+            # Iterate over all explainers
+            for name, explainer in self.explainers.items():
+                explainer_average_metrics = defaultdict(float)
+                aggregated_explainer_metrics = {}
+                aggregated_explanations = {}
 
-                explanation_metrics = {}
-                for (metric, value) in explainer.report(tag='metric'):
-                    # add up metrics in order to compute average values later
-                    explainer_average_metrics[metric] += value
-                    # save metrics of the explanation separately
-                    explanation_metrics[metric] = value
+                # iterate over all instances
+                for index in range(instances.shape[0]):
+                    explanation = explainer.explain_instance(instances.iloc[[index]])
+                    #explainer.infer_metrics(printing=False)  TODO: optional parameter
 
-                aggregated_explainer_metrics[str(index)] = explanation_metrics
-                aggregated_explanations[str(index)] = explanation
+                    explanation_metrics = {}
+                    for (metric, value) in explainer.report(tag='metric'):
+                        # add up metrics in order to compute average values later
+                        explainer_average_metrics[metric] += value
+                        # save metrics of the explanation separately
+                        explanation_metrics[metric] = value
 
-            # compute average metrics by dividing added metrics by the amount of provided instances
-            explainer_average_metrics = {metric: value/instances.shape[0]
-                                         for metric, value in explainer_average_metrics.items()}
+                    aggregated_explainer_metrics[str(index)] = explanation_metrics
+                    aggregated_explanations[str(index)] = explanation
 
-            self.averaged_metrics[name] = explainer_average_metrics
-            self.metrics[name] = aggregated_explainer_metrics
-            self.explanations[name] = aggregated_explanations
-        self.timestamp = str(datetime.now())
+                    # update progress bar
+                    pbar.update(1)
 
-    def explain_representative(self, data, sampler='random', count=10, verbose=False):
+                # compute average metrics by dividing added metrics by the amount of provided instances
+                explainer_average_metrics = {metric: value/instances.shape[0]
+                                            for metric, value in explainer_average_metrics.items()}
+
+                self.averaged_metrics[name] = explainer_average_metrics
+                self.metrics[name] = aggregated_explainer_metrics
+                self.explanations[name] = aggregated_explanations
+            self.timestamp = str(datetime.now())
+
+    def explain_representative(self, data: xb.Dataset, sampler='splime', count=10, pred_fn=None, return_samples=False):
         """
         Create a representative explanation for the given data
         :param data: pandas dataframe with the data to be explained
@@ -100,21 +108,21 @@ class ExplainerComparator:
             # sampler is an object
             sampler = sampler()
         elif sampler in sampler_map:
-            # sampler is a string
+            # sampler is a valid string
             sampler = sampler_map[sampler]()
         else:
             # sampler is unknown
-            raise Exception('Invalid sampler \''+sampler+'\'')
+            raise NameError('Invalid sampler \''+sampler+'\'')
 
         # sampler is now a Sampler object
         # sample instances and explain them
-        instances = sampler.sample(data, count)
-        
-        if verbose:
-            print('---- sampled representative instanes ----')
-            print(instances)
+        instances = sampler.sample(data, count, pred_fn)
 
-        return self.explain_instances(instances)
+        self.explain_instances(instances)
+
+        if return_samples:
+            return instances
+
 
     def store_metrics(self, filename='metrics'):
         """
