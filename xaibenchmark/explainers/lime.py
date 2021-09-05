@@ -52,7 +52,8 @@ class LimeExplainer(Explainer):
 
     def explain_instance(self, instance, num_features=10):
         instance = self.transform_dataset(instance, self.data).iloc[0]
-        self.explanation = self.explainer.explain_instance(instance, lambda x: self.predict(self.inverse_transform_dataset(pd.DataFrame(x, columns=self.train.keys()), self.data)),
+        self.explanation = self.explainer.explain_instance(instance,
+                                                           lambda x: self.predict(self.inverse_transform_dataset(pd.DataFrame(x, columns=self.train.keys()), self.data)),
                                                            num_features=num_features)
         self.instance = instance
         self.weighted_instances = self.get_weighted_instances()

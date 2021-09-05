@@ -1,24 +1,29 @@
 import numpy as np
 from xaibenchmark.explainer import Explainer
-from xaibenchmark.dlime.explainer_tabular import LimeTabularExplainer
+from xaibenchmark.dlime.explainer_tabular import LimeTabularExplainer as DLimeTabularExplainer
 import xaibenchmark as xb
 from sklearn.neighbors import NearestNeighbors
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.linear_model import LinearRegression
-
+import pandas as pd
 
 class DLimeExplainer(Explainer):
 
     def __init__(self, data, predict_fn, discretize_continuous=True):
-        self.train = data.train
-        self.test = data.test
+        self.categorical_features = data.categorical_features
+        self.data_keys = data.data.keys()
+        self.data = data
 
-        self.explainer = LimeTabularExplainer(self.train,
-                                             mode="classification",
-                                             feature_names=data.feature_names,
-                                             class_names=data.target_names,
-                                             discretize_continuous=True,
-                                             verbose=False)
+        self.train = self.transform_dataset(data.data, data)
+        self.dev = self.transform_dataset(data.data_dev, data)
+        self.test = self.transform_dataset(data.data_test, data)
+
+        self.explainer = DLimeTabularExplainer(self.train,
+                                               mode="classification",
+                                               feature_names=self.train.keys(),
+                                               class_names=data.target_names,
+                                               categorical_features=None,
+                                               discretize_continuous=discretize_continuous)
 
         clustering = AgglomerativeClustering().fit(self.train)
         self.clustered_data = np.column_stack([self.train, clustering.labels_])
@@ -27,24 +32,56 @@ class DLimeExplainer(Explainer):
         distances, self.indices = nbrs.kneighbors(self.test)
         self.clabel = clustering.labels_
 
-        self.predict_fn = predict_fn
-        self.kernel_width = np.sqrt(data.train.shape[1]) * .75
+        self.predict = predict_fn
+        self.kernel_width = np.sqrt(self.train.shape[1]) * .75
 
-    def explain_instance(self, x, num_features=10):
+    def transform_dataset(self, data: pd.DataFrame, meta: xb.Dataset) -> any:
+        return xb.utils.onehot_encode(data, meta)
 
-        p_label = self.clabel[self.indices[x]]
+    def inverse_transform_dataset(self, data: pd.DataFrame, meta: xb.Dataset):
+        """
+        Inverse transform an explainer-specific dataset into the general Astrapia Dataset format
+
+        :param data: pandas dataframe holding data in the shape LIME needs it
+        :param meta: Astrapia Dataset object holding meta information that does not depend on data instances
+        :returns: pandas dataframe in Astrapia Dataset format
+        """
+        df = pd.DataFrame(index=data.index)
+        for feature in meta.categorical_features:
+            max_indices = np.argmax(
+                data[[feature + '_' + str(l) for l in meta.categorical_features[feature]]].to_numpy(), axis=1)
+            df[feature] = pd.Series([meta.categorical_features[feature][f] for f in max_indices], index=data.index)
+
+        continuous = list(meta.feature_names - meta.categorical_features.keys())
+        df[continuous] = data[continuous]
+        return df[meta.data.keys()]
+
+    def explain_instance(self, instance, num_features=10):
+
+        self.instance = self.transform_dataset(instance, self.data).iloc[0]
+
+        p_label = self.clabel[self.indices[0]]
         N = self.clustered_data[self.clustered_data[:, 30] == p_label]
         subset = np.delete(N, 30, axis=1)
-        self.instance = self.test[x]
 
         self.explanation = self.explainer.explain_instance_hclust(self.instance,
-                                                                             self.predict_fn.predict_proba,
-                                                                             num_features=num_features,
-                                                                             model_regressor=LinearRegression(),
-                                                                             clustered_data=subset,
-                                                                             regressor='linear',
-                                                                             labels=(0, 1))
+                                                                 lambda x: self.predict(self.inverse_transform_dataset(pd.DataFrame(x, columns=self.train.keys()), self.data)),
+                                                                 num_features=num_features,
+                                                                 model_regressor=LinearRegression(),
+                                                                 clustered_data=subset,
+                                                                 regressor='linear',
+                                                                 labels=(0, 1))
+        self.weighted_instances = self.get_weighted_instances()
+
         return self.explanation
+
+    @xb.prop
+    def shape(self):
+        return 'Exponential kernel'
+
+    @xb.prop
+    def name(self):
+        return 'DLime'
 
     @xb.metric
     def absolute_area(self):
@@ -57,7 +94,11 @@ class DLimeExplainer(Explainer):
 
     @xb.metric
     def coverage(self):
-        pass
+        """
+        Proportion of instances covered in the area
+        """
+        weighted_instances = self.weighted_instances
+        return sum([weight for _, weight in self.weighted_instances]) / len(self.weighted_instances)
 
     @xb.metric
     def furthest_distance(self):
@@ -77,15 +118,76 @@ class DLimeExplainer(Explainer):
         Proportion of instances in the explanation neighborhood that shares the same output label by the
         explainer and the ML model
         """
-        ml_preds = self.predict_fn.predict_proba(self.train)[:, 1]
-        ml_preds = ml_preds > 0.5
+
+        ml_preds = self.predict(self.inverse_transform_dataset(self.train, self.data))
+        ml_preds = ml_preds[:, 1] > 0.5
         exp_preds = [self.predict_instance_surrogate(instance) for instance, _ in self.weighted_instances]
         exp_preds = np.array(exp_preds) > 0.5
-        return (ml_preds == exp_preds).sum() / len(exp_preds)
+        weights = np.array([weight for _, weight in self.weighted_instances])
+        return ((ml_preds == exp_preds) * weights).sum() / sum(weights)
 
     @xb.metric
     def balance_explanation(self):
-        pass
+        """
+        Proportion of instances in the explanation neighborhood that has been assigned label 1 by the
+        explanation model
+        """
+        exp_preds = [self.predict_instance_surrogate(instance) for instance, _ in self.weighted_instances]
+        exp_preds = np.array(exp_preds) > 0.5
+        return exp_preds.sum() / len(exp_preds)
+
+    @xb.metric
+    def balance_explanation(self):
+        """
+        Relative amount of data elements in the explanation neighborhood that had an assigned label value of 1
+        (by the explanation)
+        :return: the balance value
+        """
+
+        if hasattr(self, 'explanation'):
+            exp_preds = [self.predict_instance_surrogate(instance) for instance, _ in self.weighted_instances]
+            exp_preds = np.array(exp_preds) > 0.5
+
+            weights = np.array([weight for _, weight in self.weighted_instances])
+            return (exp_preds * weights).sum() / sum(weights)
+
+    @xb.metric
+    def balance_model(self):
+        """
+        Relative amount of data elements in the neighborhood of the explanation that had a label value of 1 assigned
+        by the classification model
+        :return: the balance value
+        """
+        if hasattr(self, 'explanation'):
+            ml_preds = self.predict(self.inverse_transform_dataset(self.train, self.data))
+            ml_preds = ml_preds[:, 1] > 0.5
+
+            weights = np.array([weight for _, weight in self.weighted_instances])
+            return (ml_preds * weights).sum() / sum(weights)
+
+    @xb.metric
+    def balance_data(self):
+        """
+        Relative amount of data elements in the neighborhood of the explanation with a label value of 1
+        :return: the balance value
+        """
+        if hasattr(self, 'explanation'):
+            weights = np.array([weight for _, weight in self.weighted_instances])
+            return sum((self.data.target.to_numpy().reshape((-1,)) == self.data.target_names[1]) * weights) / sum(
+                weights)
+
+    @xb.metric
+    def accuracy_global(self):
+        """
+        Proportion of instances in the full data space that shares the same output label by the
+        explainer and the ML model
+        """
+
+        ml_preds = self.predict(self.inverse_transform_dataset(self.train, self.data))
+        ml_preds = ml_preds[:, 1] > 0.5
+        exp_preds = [self.predict_instance_surrogate(instance) for instance, _ in self.weighted_instances]
+        exp_preds = np.array(exp_preds) > 0.5
+        return (ml_preds == exp_preds).sum() / len(ml_preds)
 
     @xb.utility
     def distance(self, x, y):
@@ -93,7 +195,15 @@ class DLimeExplainer(Explainer):
 
     @xb.utility
     def get_weighted_instances(self):
-        pass
+        if hasattr(self, 'explanation'):
+            kernel_width = np.sqrt(self.train.shape[1]) * .75
+
+            def kernel(distance):
+                return np.sqrt(np.exp(-distance ** 2 / kernel_width ** 2))
+
+            return [(instance, kernel(self.distance(self.instance, instance)))
+                    for instance in self.train.to_numpy()]
+        return []
 
     @xb.utility
     def get_explained_instance(self):
@@ -105,4 +215,6 @@ class DLimeExplainer(Explainer):
 
     @xb.utility
     def predict_instance_surrogate(self, instance):
-        pass
+        return np.clip(self.explanation.intercept[1] + sum(weight * ((instance - self.explainer.scaler.mean_) /
+                                                                     self.explainer.scaler.scale_)[idx]
+                                                           for idx, weight in self.explanation.local_exp[1]), 0, 1)
