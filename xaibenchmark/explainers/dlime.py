@@ -1,6 +1,6 @@
 import numpy as np
 from xaibenchmark.explainer import Explainer
-from xaibenchmark.dlime.explainer_tabular import LimeTabularExplainer as DLimeTabularExplainer
+from xaibenchmark.explainers.DLime.explainer_tabular import LimeTabularExplainer as DLimeTabularExplainer
 import xaibenchmark as xb
 from sklearn.neighbors import NearestNeighbors
 from sklearn.cluster import AgglomerativeClustering
