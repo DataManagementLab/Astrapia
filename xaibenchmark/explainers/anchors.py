@@ -28,7 +28,7 @@ class AnchorsExplainer(Explainer):
         self.meta = data
         
         def transformed_predict(data):
-            return predict_fn(self.inverse_transform_dataset({'data': data}, self.meta))
+            return predict_fn(self.inverse_transform_dataset({'data': data}, self.meta))[:,1] > 0.5
         self.predictor = transformed_predict
 
 
@@ -109,7 +109,7 @@ class AnchorsExplainer(Explainer):
         """
         # balance is always 0 or 1 because Anchors creates a neighborhood where all elements are supposed to have
         # the same label as the one that was used to instantiate the explanation
-        return 0 if self.explanation.exp_map["prediction"] == self.meta.target_names[0] else 1
+        return int(self.explanation.exp_map["prediction"])
 
     @xb.metric
     def balance_model(self):
@@ -121,7 +121,7 @@ class AnchorsExplainer(Explainer):
         if hasattr(self, 'explanation'):
             pred = self.predictor(self.anchors_dataset['data'])
             self.p = pred
-            return np.mean(pred[self.get_fit_anchor(self.anchors_dataset['data'])] == self.meta.target_names[1])
+            return np.mean(pred[self.get_fit_anchor(self.anchors_dataset['data'])])
 
     @xb.metric
     def balance_data(self):
