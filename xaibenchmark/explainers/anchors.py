@@ -11,11 +11,13 @@ class AnchorsExplainer(Explainer):
     """
 
     def __init__(self, data, predict_fn, min_precision=0.9):
+        """
+        Initializes an Anchors explainer
 
-        #dataset = utils.load_dataset(dataset_name, balance=True, dataset_folder=dataset_folder, discretize=True)
-        #self.rawdata = load_adult.load_csv_data(dataset_name, root_path=dataset_folder)
-
-        # TODO: Implement Transformations
+        :param data: data to be explained
+        :param predict_fn: prediction function
+        :param min_precision: minimum precision of the anchor
+        """
 
         self.anchors_dataset = self.transform_dataset(data.data, data)
         self.min_precision = min_precision
@@ -33,6 +35,7 @@ class AnchorsExplainer(Explainer):
 
 
     def transform_dataset(self, data: pd.DataFrame, meta: xb.Dataset) -> any:
+
         result = {
             'labels': (meta.target == meta.target_names[-1]).astype(int).to_numpy().reshape((-1,)),
             'class_names': meta.target_names,
@@ -64,12 +67,10 @@ class AnchorsExplainer(Explainer):
         :return: the explanation
         """
 
-        #instance = preprocessing.anchors_preprocess_instance(self.rawdata.data.append(instance, ignore_index=True).to_numpy())
         instance = self.transform_dataset(instance, self.meta)
 
         self.explanation = self.explainer.explain_instance(instance['data'][0], self.predictor, threshold=self.min_precision)
         self.instance = instance['data'][0]
-        #self.instance_set, self.instance_label_set = self.get_subset(instance_set)
         return self.explanation
 
     @xb.prop

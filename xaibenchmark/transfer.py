@@ -2,7 +2,7 @@ import inspect
 import xaibenchmark as xb
 from functools import partial
 
-_transferlist = []
+_transferlist = [] # variable keeping track of loaded transfer functions
     
 def add_transfer(f):
     params = list(inspect.signature(f).parameters)

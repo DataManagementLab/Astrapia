@@ -89,7 +89,7 @@ class ExplainerComparator:
                 self.explanations[name] = aggregated_explanations
             self.timestamp = str(datetime.now())
 
-    def explain_representative(self, data: xb.Dataset, sampler='splime', count=10, pred_fn=None, return_samples=False):
+    def explain_representative(self, data: xb.Dataset, sampler='splime', count=10, pred_fn=None, return_samples=False, **kwargs):
         """
         Create a representative explanation for the given data
         :param data: pandas dataframe with the data to be explained
@@ -104,6 +104,7 @@ class ExplainerComparator:
             'random': random.RandomSampler,
             'splime': splime.SPLimeSampler,
         }
+        
         if issubclass(type(sampler), base_sampler.Sampler):
             # sampler is an object
             sampler = sampler()
@@ -116,8 +117,9 @@ class ExplainerComparator:
 
         # sampler is now a Sampler object
         # sample instances and explain them
-        instances = sampler.sample(data, count, pred_fn)
+        instances = sampler.sample(data, count, pred_fn, **kwargs)
 
+        # relay the samples instances to the regular explain_instances function
         self.explain_instances(instances)
 
         if return_samples:
