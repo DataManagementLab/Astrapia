@@ -25,7 +25,7 @@ class LimeExplainer(Explainer):
                                                                 class_names=data.target_names, categorical_features=None,
                                                                 discretize_continuous=discretize_continuous)
 
-        self.predict = lambda x: predict_fn(self.inverse_transform_dataset(x, data))
+        self.predict = predict_fn
         self.kernel_width = np.sqrt(self.train.shape[1]) * .75
 
     def transform_dataset(self, data: pd.DataFrame, meta: xb.Dataset) -> any:
@@ -52,7 +52,7 @@ class LimeExplainer(Explainer):
 
     def explain_instance(self, instance, num_features=10):
         instance = self.transform_dataset(instance, self.data).iloc[0]
-        self.explanation = self.explainer.explain_instance(instance, lambda x: self.predict(pd.DataFrame(x, columns=self.train.keys()), self.data),
+        self.explanation = self.explainer.explain_instance(instance, lambda x: self.predict(self.inverse_transform_dataset(pd.DataFrame(x, columns=self.train.keys()), self.data)),
                                                            num_features=num_features)
         self.instance = instance
         self.weighted_instances = self.get_weighted_instances()
@@ -103,7 +103,7 @@ class LimeExplainer(Explainer):
         explainer and the ML model
         """
 
-        ml_preds = self.predict(self.train)
+        ml_preds = self.predict(self.inverse_transform_dataset(self.train, self.data))
         ml_preds = ml_preds[:,1] > 0.5
         exp_preds = [self.predict_instance_surrogate(instance) for instance,_ in self.weighted_instances]
         exp_preds = np.array(exp_preds) > 0.5
@@ -119,6 +119,64 @@ class LimeExplainer(Explainer):
         exp_preds = [self.predict_instance_surrogate(instance) for instance, _ in self.weighted_instances]
         exp_preds = np.array(exp_preds) > 0.5
         return exp_preds.sum() / len(exp_preds)
+
+    @xb.metric
+    def balance_explanation(self):
+        """
+        Relative amount of data elements in the explanation neighborhood that had an assigned label value of 1
+        (by the explanation)
+        :return: the balance value
+        """
+        
+        if hasattr(self, 'explanation'):
+
+            exp_preds = [self.predict_instance_surrogate(instance) for instance,_ in self.weighted_instances]
+            exp_preds = np.array(exp_preds) > 0.5
+
+            weights = np.array([weight for _, weight in self.weighted_instances])
+            return (exp_preds * weights).sum() / sum(weights)
+
+    @xb.metric
+    def balance_model(self):
+        """
+        Relative amount of data elements in the neighborhood of the explanation that had a label value of 1 assigned
+        by the classification model
+        :return: the balance value
+        """
+        if hasattr(self, 'explanation'):
+
+            ml_preds = self.predict(self.inverse_transform_dataset(self.train, self.data))
+            ml_preds = ml_preds[:,1] > 0.5
+            
+            weights = np.array([weight for _, weight in self.weighted_instances])
+            return (ml_preds * weights).sum() / sum(weights)
+
+
+    @xb.metric
+    def balance_data(self):
+        """
+        Relative amount of data elements in the neighborhood of the explanation with a label value of 1
+        :return: the balance value
+        """
+        if hasattr(self, 'explanation'):
+
+            weights = np.array([weight for _, weight in self.weighted_instances])
+            return sum((self.data.target.to_numpy().reshape((-1,)) == self.data.target_names[1]) * weights) / sum(weights)
+
+    @xb.metric
+    def accuracy_global(self):
+        """
+        Proportion of instances in the full data space that shares the same output label by the
+        explainer and the ML model
+        """
+
+        ml_preds = self.predict(self.inverse_transform_dataset(self.train, self.data))
+        ml_preds = ml_preds[:,1] > 0.5
+        exp_preds = [self.predict_instance_surrogate(instance) for instance,_ in self.weighted_instances]
+        exp_preds = np.array(exp_preds) > 0.5
+        return (ml_preds == exp_preds).sum() / len(ml_preds)
+
+
 
     @xb.utility
     def distance(self, x, y):
