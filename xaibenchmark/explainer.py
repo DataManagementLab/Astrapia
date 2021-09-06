@@ -4,14 +4,10 @@ import pandas as pd
 
 
 class Explainer:
-    """Base class for wrapping and comparing Explainers
-    
-    Add metrics using the @metric decorator.
-    Add utility functions using the @utility decorator.
-
-    When using the following predefined metrics and utilities, the library can infer other metrics by calling 
-        your_explainer.infer_metrics()
-
+    """
+    The Explainer class wraps an explainer and provides a unified interface for it. 
+    Initialization depends on the specific explainer. 
+    This class should *not* be used as is but rather extended.
     """
     
     def __init__(self):
@@ -44,7 +40,7 @@ class Explainer:
         """
         Returns a list of metrics that are available for this explainer
 
-        :return: a list of metrics
+        :return: a list of metric references
         """
         return [x for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'metric']
 
@@ -52,7 +48,7 @@ class Explainer:
         """
         Returns a list of properties that are available for this explainer
 
-        :return: a list of properties
+        :return: a list of property references
         """
         return [x for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'prop']
     
@@ -71,8 +67,10 @@ class Explainer:
         
     def report(self, tag = None) -> dict:
         """
-        Compute and print metrics for this explainer and the properties
+        Compute metrics and properties for this explainer.
+        If a tag is supplied, only the respective type of attribute is returned (metrics or properties)
 
+        :param tag: *None* or 'prop' or 'metric'
         :return: a dictionary of metrics
         """
         if tag is None:

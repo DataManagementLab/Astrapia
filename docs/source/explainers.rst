@@ -3,28 +3,19 @@ Explainers
 *******************
 Explainers are used to explain the behavour of an arbitrary machine learning model.
 
-.. py:class:: Explainer
+.. autoclass:: xaibenchmark.Explainer
 
-    The Explainer class wraps an explainer and provides a unified interface for it. 
-    Initialization depends on the specific explainer. 
-    This class should *not* be used as is but rather extended.
+    .. automethod:: metrics()
 
-    .. py:method:: metrics()
+    .. automethod:: props()
 
-        Returns a list of implemented metrics
+    .. method:: infer_metrics(printing=True)
 
-    .. py:method:: props()
+        Uses :doc:`transfer` to infer additional metrics
 
-        Returns a list of implemented properties
+        :param printing: boolean value on whether to print the inferred metrics
 
-    .. py:method:: infer_metrics(printing=True)
-
-        Uses transfer (todo insert link here) to infer additional metrics
-
-    .. py:method:: report(tag=None)
-
-        Returns a dictionary of metric and property names and their values. 
-        If a tag ('metric' or 'prop') is supplied, only the corresponding type of attribute is reported.
+    .. automethod:: report(tag=None)
 
 
 Preimplemented Explainers
@@ -34,7 +25,9 @@ Preimplemented Explainers
     :maxdepth: 2
  
     explainers/lime
+    explainers/dlime
     explainers/anchors
+
 
  
 
