@@ -7,6 +7,7 @@ from sklearn.cluster import AgglomerativeClustering
 from sklearn.linear_model import LinearRegression
 import pandas as pd
 
+
 class DLimeExplainer(Explainer):
 
     def __init__(self, data, predict_fn, discretize_continuous=True):
@@ -84,7 +85,7 @@ class DLimeExplainer(Explainer):
         return 'DLime'
 
     @xb.metric
-    def absolute_area(self):
+    def area_absolute(self):
         """
         Area that is covered by the kernel in high dimension of the feature space.
         """
@@ -101,7 +102,7 @@ class DLimeExplainer(Explainer):
         return sum([weight for _, weight in self.weighted_instances]) / len(self.weighted_instances)
 
     @xb.metric
-    def furthest_distance(self):
+    def distance_furthest(self):
         kernel_width = np.sqrt(self.train.shape[1]) * .75
 
         def kernel(distance):

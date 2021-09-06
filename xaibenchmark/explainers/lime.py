@@ -69,7 +69,7 @@ class LimeExplainer(Explainer):
         return 'Lime'
 
     @xb.metric
-    def absolute_area(self):
+    def area_absolute(self):
         """
         Area that is covered by the kernel in high dimension of the feature space.
         """
@@ -86,7 +86,7 @@ class LimeExplainer(Explainer):
         return sum([weight for _, weight in self.weighted_instances]) / len(self.weighted_instances)
 
     @xb.metric
-    def furthest_distance(self):
+    def distance_furthest(self):
         kernel_width = np.sqrt(self.train.shape[1]) * .75
 
         def kernel(distance):

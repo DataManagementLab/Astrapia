@@ -79,7 +79,7 @@ class AnchorsExplainer(Explainer):
 
     @xb.prop
     def name(self):
-        return 'Not Lime'
+        return 'Anchors'
 
     @xb.metric
     def coverage(self):
@@ -134,7 +134,7 @@ class AnchorsExplainer(Explainer):
             return np.mean(self.anchors_dataset['labels'][self.get_fit_anchor(self.anchors_dataset['data'])])
 
     @xb.metric
-    def relative_area(self):
+    def area_relative(self):
         """
         Relative amount of feature space over all features n that is specified by the explanation.
         area = Product[i=1->n] fi, f: 1 if feature is not in explanation, else 1/m, m: deminsionality of feature
