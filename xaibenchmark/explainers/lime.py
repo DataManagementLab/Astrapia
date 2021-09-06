@@ -60,13 +60,23 @@ class LimeExplainer(Explainer):
 
         return self.explanation
 
+
+    # Helper function for accessing the predictions of lime's surrogate model
+    def predict_instance_surrogate(self, instance):
+        return np.clip(self.explanation.intercept[1] + sum(weight * ((instance - self.explainer.scaler.mean_) /
+                                                                     self.explainer.scaler.scale_)[idx]
+                                                           for idx, weight in self.explanation.local_exp[1]), 0, 1)
+
+
     @xb.prop
     def shape(self):
         return 'Exponential kernel'
 
+
     @xb.prop
     def name(self):
         return 'Lime'
+
 
     @xb.metric
     def area_absolute(self):
@@ -77,6 +87,7 @@ class LimeExplainer(Explainer):
         kernel_dimension = self.train.shape[1]
         return (kernel_width * np.sqrt(2 * np.pi)) ** kernel_dimension
 
+
     @xb.metric
     def coverage(self):
         """
@@ -84,6 +95,7 @@ class LimeExplainer(Explainer):
         """
         weighted_instances = self.weighted_instances
         return sum([weight for _, weight in self.weighted_instances]) / len(self.weighted_instances)
+
 
     @xb.metric
     def distance_furthest(self):
@@ -96,6 +108,7 @@ class LimeExplainer(Explainer):
         distance_instances = (self.distance(self.instance, instance) for instance in training_instances)
         weighted_distances = (distance * kernel(distance) for distance in distance_instances)
         return sum(weighted_distances)
+
 
     @xb.metric
     def accuracy(self):
@@ -111,15 +124,6 @@ class LimeExplainer(Explainer):
         weights = np.array([weight for _, weight in self.weighted_instances])
         return ((ml_preds == exp_preds) * weights).sum() / sum(weights)
 
-    @xb.metric
-    def balance_explanation(self):
-        """
-        Proportion of instances in the explanation neighborhood that has been assigned label 1 by the
-        explanation model
-        """
-        exp_preds = [self.predict_instance_surrogate(instance) for instance, _ in self.weighted_instances]
-        exp_preds = np.array(exp_preds) > 0.5
-        return exp_preds.sum() / len(exp_preds)
 
     @xb.metric
     def balance_explanation(self):
@@ -136,6 +140,7 @@ class LimeExplainer(Explainer):
 
             weights = np.array([weight for _, weight in self.weighted_instances])
             return (exp_preds * weights).sum() / sum(weights)
+
 
     @xb.metric
     def balance_model(self):
@@ -164,6 +169,7 @@ class LimeExplainer(Explainer):
             weights = np.array([weight for _, weight in self.weighted_instances])
             return sum((self.data.target.to_numpy().reshape((-1,)) == self.data.target_names[1]) * weights) / sum(weights)
 
+
     @xb.metric
     def accuracy_global(self):
         """
@@ -183,6 +189,7 @@ class LimeExplainer(Explainer):
     def distance(self, x, y):
         return np.linalg.norm(x - y)
 
+
     @xb.utility
     def get_weighted_instances(self):
         if hasattr(self, 'explanation'):
@@ -195,16 +202,14 @@ class LimeExplainer(Explainer):
                     for instance in self.train.to_numpy()]
         return []
 
+
     @xb.utility
     def get_explained_instance(self):
         return self.instance
+
 
     @xb.utility
     def get_training_data(self):
         return self.train
 
-    @xb.utility
-    def predict_instance_surrogate(self, instance):
-        return np.clip(self.explanation.intercept[1] + sum(weight * ((instance - self.explainer.scaler.mean_) /
-                                                                     self.explainer.scaler.scale_)[idx]
-                                                           for idx, weight in self.explanation.local_exp[1]), 0, 1)
+

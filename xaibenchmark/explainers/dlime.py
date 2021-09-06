@@ -127,15 +127,6 @@ class DLimeExplainer(Explainer):
         weights = np.array([weight for _, weight in self.weighted_instances])
         return ((ml_preds == exp_preds) * weights).sum() / sum(weights)
 
-    @xb.metric
-    def balance_explanation(self):
-        """
-        Proportion of instances in the explanation neighborhood that has been assigned label 1 by the
-        explanation model
-        """
-        exp_preds = [self.predict_instance_surrogate(instance) for instance, _ in self.weighted_instances]
-        exp_preds = np.array(exp_preds) > 0.5
-        return exp_preds.sum() / len(exp_preds)
 
     @xb.metric
     def balance_explanation(self):
