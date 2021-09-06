@@ -8,7 +8,7 @@ LimeExplainer is a wrapper around lime_.
     .. py:method:: __init__(data, predict_fn)
 
         Initializes a LimeExplainer object. 
-        The data object should be an Astrapia dataset_.
+        The data object should be an Astrapia dataset (todo insert link here).
         The pred_fn should be equivalent to predict_proba of sklearn models.
 
 

@@ -19,7 +19,7 @@ Explainers are used to explain the behavour of an arbitrary machine learning mod
 
     .. py:method:: infer_metrics(printing=True)
 
-        Uses transfer_ to infer additional metrics
+        Uses transfer (todo insert link here) to infer additional metrics
 
     .. py:method:: report(tag=None)
 
