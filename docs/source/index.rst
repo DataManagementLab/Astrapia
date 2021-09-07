@@ -13,6 +13,7 @@ Still, some explainer are better than others. This framework is designed to comp
 Astrapia is **not** a framework for ranking explainers. It barely aids users in judging advantages and disadvantages of different explainers.
 
 .. toctree::
+   :caption: Table of Contents
    :maxdepth: 2
 
    installation
