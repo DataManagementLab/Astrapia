@@ -7,7 +7,7 @@ import pandas as pd
 
 class AnchorsExplainer(Explainer):
     """
-    implementation of the Explainer "Anchors" onto the base explainer class
+    Implementation of the Anchors Explainer onto the base Explainer class
     """
 
     def __init__(self, data, predict_fn, min_precision=0.9):
@@ -61,6 +61,7 @@ class AnchorsExplainer(Explainer):
     def explain_instance(self, instance):
         """
         Creates an Anchor explanation based on a given instance
+
         :param instance: "Anchor" for explanation
         :param instance_set: textual information about subset for metric information
         :param threshold: Worst possible precision for the explanation
@@ -85,6 +86,7 @@ class AnchorsExplainer(Explainer):
     def coverage(self):
         """
         The relative amount of data elements that are in the area of the explanation
+
         :return: the coverage value
         """
         if hasattr(self, 'explanation'):
@@ -92,9 +94,17 @@ class AnchorsExplainer(Explainer):
         return np.nan
 
     @xb.metric
+    def coverage_absolute(self):
+        """
+        Number of instances within the neighbourhood.
+        """
+        return self.get_fit_anchor(self.anchors_dataset['data']).shape[0]
+
+    @xb.metric
     def accuracy_global(self):
         """
         The ML-accuracy of the explanation when applied to the whole dataset (not just the area of the explanation)
+
         :return: the precision value
         """
         if hasattr(self, 'explanation'):
@@ -106,6 +116,7 @@ class AnchorsExplainer(Explainer):
         """
         Relative amount of data elements in the explanation neighborhood that had an assigned label value of 1
         (by the explanation)
+
         :return: the balance value
         """
         # balance is always 0 or 1 because Anchors creates a neighborhood where all elements are supposed to have
@@ -117,6 +128,7 @@ class AnchorsExplainer(Explainer):
         """
         Relative amount of data elements in the neighborhood of the explanation that had a label value of 1 assigned
         by the classification model
+
         :return: the balance value
         """
         if hasattr(self, 'explanation'):
@@ -128,6 +140,7 @@ class AnchorsExplainer(Explainer):
     def balance_data(self):
         """
         Relative amount of data elements in the neighborhood of the explanation with a label value of 1
+        
         :return: the balance value
         """
         if hasattr(self, 'explanation'):
@@ -138,6 +151,7 @@ class AnchorsExplainer(Explainer):
         """
         Relative amount of feature space over all features n that is specified by the explanation.
         area = Product[i=1->n] fi, f: 1 if feature is not in explanation, else 1/m, m: deminsionality of feature
+        
         :return: the area value
         """
         if hasattr(self, 'explanation'):
@@ -151,6 +165,7 @@ class AnchorsExplainer(Explainer):
         """
         Relative amount of data elements in explanation neighborhood or given dataset that have the same explanation
         label as the label assigned by the ML model
+        
         :return: the accuracy value
         """
         if hasattr(self, 'explanation'):
@@ -164,6 +179,7 @@ class AnchorsExplainer(Explainer):
     def get_neighborhood_instances(self):
         """
         Receive all data elements in the given subset that belong to the neighborhood of the explanation
+        
         :return: ndarray of elements
         """
         if hasattr(self, 'explanation'):

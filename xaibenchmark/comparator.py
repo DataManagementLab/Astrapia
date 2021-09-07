@@ -4,7 +4,7 @@ import xaibenchmark as xb
 from datetime import datetime
 import json
 from tqdm import tqdm
-
+import pandas as pd
 
 class ExplainerComparator:
     """
@@ -33,17 +33,20 @@ class ExplainerComparator:
         # timestamp of the creation of metrics
         self.timestamp = ''
 
-    def add_explainer(self, explainer, name):
+    def add_explainer(self, explainer: xb.Explainer, name: str):
         """
-        Add an instantiated explainer to the comparator
-        :param explainer: explainer as python object
-        :param name: name that is supposed to be used for the explainer
+        Add an instantiated explainer to the comparator. 
+        Use the name attribute for uniquely identifying different explainers (E.g. between 'Anchors acc>95%' and 'Anchors acc>85%')
+
+        :param explainer: explainer object
+        :param name: unique name for identifying the explainer
         """
         self.explainers[name] = explainer
 
-    def explain_instances(self, instances):
+    def explain_instances(self, instances: pd.DataFrame):
         """
         Create explanations for all combinations of provided explainers and instances, then save metrics
+
         :param instances: instances to be used to create explanations as pandas dataframe
         """
 
@@ -89,9 +92,10 @@ class ExplainerComparator:
                 self.explanations[name] = aggregated_explanations
             self.timestamp = str(datetime.now())
 
-    def explain_representative(self, data: xb.Dataset, sampler='splime', count=10, pred_fn=None, return_samples=False, **kwargs):
+    def explain_representative(self, data: xb.Dataset, sampler:str='splime', count:int=10, pred_fn=None, return_samples:bool=False, **kwargs):
         """
         Create a representative explanation for the given data
+
         :param data: pandas dataframe with the data to be explained
         :param sampler: sampler to be used to create representative explanation
         :param count: amount of representative samples to be created
@@ -126,9 +130,10 @@ class ExplainerComparator:
             return instances
 
 
-    def store_metrics(self, filename='metrics'):
+    def store_metrics(self, filename:str='metrics'):
         """
         Store metric data in a json file
+
         :param filename: name of the file
         :return: metric data as dictionary
         """
@@ -140,6 +145,7 @@ class ExplainerComparator:
     def get_metric_data(self):
         """
         Get metric data including the timestamp of the creation of metrics
+
         :return: metric data as dictionary
         """
         return {'timestamp': self.timestamp, 'explainers': list(self.explainers.keys()),

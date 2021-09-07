@@ -10,8 +10,18 @@ import lime.lime_tabular
 
 
 class LimeExplainer(Explainer):
+    """
+    TODO: write
+    """
 
     def __init__(self, data, predict_fn, discretize_continuous=True):
+        """
+        TODO: write
+
+        :param data: data
+        :param predict_fn: predict_proba
+        :param discretize_continuous: dis
+        """
 
         self.categorical_features = data.categorical_features
         self.data_keys = data.data.keys()
@@ -96,6 +106,12 @@ class LimeExplainer(Explainer):
         weighted_instances = self.weighted_instances
         return sum([weight for _, weight in self.weighted_instances]) / len(self.weighted_instances)
 
+    @xb.metric
+    def coverage_absolute(self):
+        """
+        Number of instances within the neighbourhood.
+        """
+        return sum(weight for _, weight in self.weighted_instances)
 
     @xb.metric
     def distance_furthest(self):

@@ -9,8 +9,18 @@ import pandas as pd
 
 
 class DLimeExplainer(Explainer):
+    """
+    TODO: write
+    """
 
     def __init__(self, data, predict_fn, discretize_continuous=True):
+        """
+        TODO: write
+        
+        :param data:
+        :param predict_fn:
+        :param discretize_continuous:
+        """
         self.categorical_features = data.categorical_features
         self.data_keys = data.data.keys()
         self.data = data
@@ -58,6 +68,9 @@ class DLimeExplainer(Explainer):
         return df[meta.data.keys()]
 
     def explain_instance(self, instance, num_features=10):
+        """
+        TODO: override
+        """
 
         self.instance = self.transform_dataset(instance, self.data).iloc[0]
 
@@ -100,6 +113,13 @@ class DLimeExplainer(Explainer):
         """
         weighted_instances = self.weighted_instances
         return sum([weight for _, weight in self.weighted_instances]) / len(self.weighted_instances)
+
+    @xb.metric
+    def coverage_absolute(self):
+        """
+        Number of instances within the neighbourhood.
+        """
+        return sum(weight for _, weight in self.weighted_instances)
 
     @xb.metric
     def distance_furthest(self):

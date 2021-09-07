@@ -35,6 +35,15 @@ class Explainer:
         :return: the inverse transformed dataset
         """
         return data.copy()
+
+    def explain_instance(self, instance: pd.DataFrame):
+        """
+        Used to generate an explanation of a single instance. 
+        Should be overriden in every subclass of Explainer.
+
+        :param instance: the instance to be explained
+        """
+        raise NotImplementedError
         
     def metrics(self) -> list:
         """

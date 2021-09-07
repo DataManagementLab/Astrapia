@@ -4,10 +4,7 @@ Explainers
 Explainers are used to explain the behavour of an arbitrary machine learning model.
 
 .. autoclass:: xaibenchmark.Explainer
-
-    .. automethod:: metrics()
-
-    .. automethod:: props()
+    :members: metrics, props, report, explain_instance
 
     .. method:: infer_metrics(printing=True)
 
@@ -15,7 +12,6 @@ Explainers are used to explain the behavour of an arbitrary machine learning mod
 
         :param printing: boolean value on whether to print the inferred metrics
 
-    .. automethod:: report(tag=None)
 
 
 Preimplemented Explainers
