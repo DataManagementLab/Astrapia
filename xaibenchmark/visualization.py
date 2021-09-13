@@ -1,4 +1,6 @@
 import json
+import textwrap
+
 import plotly.graph_objects as go
 
 
@@ -61,6 +63,8 @@ def fill_in_value(metric_dict, metric):
     :return: metric value as String
     """
     if metric in metric_dict:
+        if isinstance(metric, str):
+            return metric_dict[metric]
         return round_table_value(metric_dict[metric])
     else:
         return '-'
@@ -100,6 +104,35 @@ def load_metrics_from_json(path):
     """
     with open(path) as json_file:
         return json.load(json_file)
+
+def print_properties(data):
+    """
+    prints properties of explainers as table
+    :param data: data as returned by Comparator
+    """
+
+    headline = ['Property']
+    values = []
+    properties = [x.keys() for x in data['properties'].values()]
+    all_properties = sorted(list(set([item for sublist in properties for item in sublist])))
+
+    for name, properties in data['properties'].items():
+        headline += [name]
+        explainer_values = [fill_in_value(properties, prop) for prop in all_properties]
+        values.append(explainer_values)
+
+    fig = go.Figure(data=[go.Table(
+        header=dict(values=headline,
+                    line_color='#bfbfbf',
+                    fill_color='#e0e5df',
+                    align='left'),
+        cells=dict(values=[all_properties] + values,  # 2nd column
+                   line_color='#bfbfbf',
+                   fill_color='#e0e5df',
+                   align='left'))
+    ])
+    fig.update_layout(title_text=f'Properties from all explainers')
+    fig.show()
 
 
 def print_metrics(data, explainer=None, index=None, plot='table', show_metric_with_one_value=True):
@@ -146,11 +179,12 @@ def print_metrics(data, explainer=None, index=None, plot='table', show_metric_wi
                                     text=[round(value, 3) for _, value in normalized_pair],
                                     textposition='auto')])
             fig.update_layout(title_text=header, plot_bgcolor='#fffaf4', height=600, margin=dict(l=20, r=20, t=60, b=200))
+            annotation = textwrap.wrap("Non-relative metrics are not shown here because they cannot be compared with "
+                                       "relative values in the same plot. Balance-related metrics were rescaled to "
+                                       "display how close they are to 0.5, because that is the optimal balance value.")
+            annotation = "<br>".join(annotation)
             fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.51, showarrow=False,
-                                    text="Non-relative metrics are not shown here because they cannot be compared<br>"
-                                         "with relative values in the same plot.<br>"
-                                         "Balance-related metrics were rescaled to display how close they are<br>"
-                                         "to 0.5, because that is the optimal balance value.",
+                                    text=annotation,
                                     textangle=0, xanchor='left', xref="paper", yref="paper"))
             fig.update_annotations(align="left")
             fig.show()
@@ -207,13 +241,14 @@ def print_metrics(data, explainer=None, index=None, plot='table', show_metric_wi
             fig.update_layout(barmode='group', title_text=f'Metric Comparison', plot_bgcolor='#ececea',
                               height=600, margin=dict(l=20, r=20, t=60, b=200))
 
-            # add annotation
+            annotation = textwrap.wrap("Non-relative metrics are normalized to be between 0 and 1. If there is only "
+                                       "one value for a non-relative metric (in case metrics with only a single value "
+                                       "are shown), then this metric is not visible. Balance-related metrics were "
+                                       "rescaled to display how close they are to 0.5, because that is the optimal "
+                                       "balance value.")
+            annotation = "<br>".join(annotation)
             fig.add_annotation(dict(font=dict(color='black', size=15), x=0, y=-0.52, showarrow=False,
-                                    text="Non-relative metrics are normalized to be between 0 and 1. If there is<br>"
-                                         "only one value for a non-relative metric (in case metrics with only a<br>"
-                                         "single value are shown), then this metric is not visible.<br>"
-                                         "Balance-related metrics were rescaled to display how close they are<br>"
-                                         "to 0.5, because that is the optimal balance value.",
+                                    text=annotation,
                                     textangle=0, xanchor='left', xref="paper", yref="paper"))
             fig.update_annotations(align="left")
 

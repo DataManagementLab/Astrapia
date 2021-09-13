@@ -16,6 +16,9 @@ class ExplainerComparator:
         # Dictionary with key: name of explainer, value: explainer as object
         self.explainers = {}
 
+        # Dictionary with key: name of explainer, value: dictionary with key: name of property, value: property
+        self.properties = {}
+
         # Dictionary with key: name of explainer, value: dictionary with key: name of metric, value: average value
         self.averaged_metrics = {}
 
@@ -41,7 +44,13 @@ class ExplainerComparator:
         :param explainer: explainer object
         :param name: unique name for identifying the explainer
         """
+
+        explainer_properties = {}
+        for (prop, value) in explainer.report(tag='prop'):
+            explainer_properties[prop] = value
+
         self.explainers[name] = explainer
+        self.properties[name] = explainer_properties
 
     def explain_instances(self, instances: pd.DataFrame):
         """
@@ -55,8 +64,9 @@ class ExplainerComparator:
         self.explanations = {}
         self.metrics = {}
         self.instances = instances
+        self.timestamp = ''
 
-        # Initilize tqdm progress bar
+        # Initialize tqdm progress bar
         with tqdm(total=len(self.explainers.keys()) * len(instances)) as pbar:
 
             # Iterate over all explainers
@@ -68,7 +78,6 @@ class ExplainerComparator:
                 # iterate over all instances
                 for index in range(instances.shape[0]):
                     explanation = explainer.explain_instance(instances.iloc[[index]])
-                    #explainer.infer_metrics(printing=False)  TODO: optional parameter
 
                     explanation_metrics = {}
                     for (metric, value) in explainer.report(tag='metric'):
@@ -129,8 +138,7 @@ class ExplainerComparator:
         if return_samples:
             return instances
 
-
-    def store_metrics(self, filename:str='metrics'):
+    def store_metrics(self, filename: str = 'metrics'):
         """
         Store metric data in a json file
 
@@ -148,7 +156,7 @@ class ExplainerComparator:
 
         :return: metric data as dictionary
         """
-        return {'timestamp': self.timestamp, 'explainers': list(self.explainers.keys()),
+        return {'timestamp': self.timestamp, 'explainers': list(self.explainers.keys()), 'properties': self.properties,
                 'averaged_metrics': self.averaged_metrics, 'separate_metrics': self.metrics}
 
 

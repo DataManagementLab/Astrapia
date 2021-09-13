@@ -74,7 +74,7 @@ class Explainer:
         if printing:
             print('inferred metrics:', {x for x in dir(self) if getattr(getattr(self, x), 'tag', None) in ['metric', 'utility']})
         
-    def report(self, tag = None) -> dict:
+    def report(self, tag=None) -> dict:
         """
         Compute metrics and properties for this explainer.
         If a tag is supplied, only the respective type of attribute is returned (metrics or properties)
