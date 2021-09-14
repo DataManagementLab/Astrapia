@@ -10,16 +10,16 @@ import pandas as pd
 
 class DLimeExplainer(Explainer):
     """
-    TODO: write
+    Implementation of the DLime Explainer onto the base Explainer class
     """
 
     def __init__(self, data, predict_fn, discretize_continuous=True):
         """
-        TODO: write
+        Initializes a DLime explainer
         
-        :param data:
-        :param predict_fn:
-        :param discretize_continuous:
+        :param data: data that is supposed to be explained
+        :param predict_fn: classification model that is supposed to be explained
+        :param discretize_continuous: should continuous values be separated into discrete categories
         """
         self.categorical_features = data.categorical_features
         self.data_keys = data.data.keys()
@@ -68,10 +68,6 @@ class DLimeExplainer(Explainer):
         return df[meta.data.keys()]
 
     def explain_instance(self, instance, num_features=10):
-        """
-        TODO: override
-        """
-
         self.instance = self.transform_dataset(instance, self.data).iloc[0]
 
         p_label = self.clabel[self.indices[0]]
@@ -79,7 +75,8 @@ class DLimeExplainer(Explainer):
         subset = np.delete(N, 30, axis=1)
 
         self.explanation = self.explainer.explain_instance_hclust(self.instance,
-                                                                 lambda x: self.predict(self.inverse_transform_dataset(pd.DataFrame(x, columns=self.train.keys()), self.data)),
+                                                                 lambda x: self.predict(self.inverse_transform_dataset(
+                                                                     pd.DataFrame(x, columns=self.train.keys()), self.data)),
                                                                  num_features=num_features,
                                                                  model_regressor=LinearRegression(),
                                                                  clustered_data=subset,
@@ -88,6 +85,17 @@ class DLimeExplainer(Explainer):
         self.weighted_instances = self.get_weighted_instances()
 
         return self.explanation
+
+    @xb.utility
+    def predict_instance_surrogate(self, instance):
+        """
+        Helper function for accessing the predictions of lime's surrogate model
+        :param instance: instance whose prediction should be provided
+        :return: label prediction of given instance
+        """
+        return np.clip(self.explanation.intercept[1] + sum(weight * ((instance - self.explainer.scaler.mean_) /
+                                                                     self.explainer.scaler.scale_)[idx]
+                                                           for idx, weight in self.explanation.local_exp[1]), 0, 1)
 
     @xb.prop
     def shape(self):
@@ -111,7 +119,6 @@ class DLimeExplainer(Explainer):
         """
         Proportion of instances covered in the area
         """
-        weighted_instances = self.weighted_instances
         return sum([weight for _, weight in self.weighted_instances]) / len(self.weighted_instances)
 
     @xb.metric
@@ -123,6 +130,10 @@ class DLimeExplainer(Explainer):
 
     @xb.metric
     def distance_furthest(self):
+        """
+        Highest distance between any two instances that are in the neighborhood of the explanation
+        :return: distance value
+        """
         kernel_width = np.sqrt(self.train.shape[1]) * .75
 
         def kernel(distance):
@@ -203,10 +214,20 @@ class DLimeExplainer(Explainer):
 
     @xb.utility
     def distance(self, x, y):
+        """
+        calculates the euclidean distance between two data points
+        :param x: first point
+        :param y: second point
+        :return: distance
+        """
         return np.linalg.norm(x - y)
 
     @xb.utility
     def get_weighted_instances(self):
+        """
+        returns instances associated with their weight concerning the explanation
+        :return: List of tuples with instance and its weight
+        """
         if hasattr(self, 'explanation'):
             kernel_width = np.sqrt(self.train.shape[1]) * .75
 
@@ -219,14 +240,9 @@ class DLimeExplainer(Explainer):
 
     @xb.utility
     def get_explained_instance(self):
+        """
+        Returns instance that was explained
+        :return: instance
+        """
         return self.instance
 
-    @xb.utility
-    def get_training_data(self):
-        return self.train
-
-    @xb.utility
-    def predict_instance_surrogate(self, instance):
-        return np.clip(self.explanation.intercept[1] + sum(weight * ((instance - self.explainer.scaler.mean_) /
-                                                                     self.explainer.scaler.scale_)[idx]
-                                                           for idx, weight in self.explanation.local_exp[1]), 0, 1)

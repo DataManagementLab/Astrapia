@@ -2,25 +2,22 @@ import numpy as np
 from xaibenchmark import Explainer
 import xaibenchmark as xb
 import pandas as pd
-
-from functools import reduce
-
 import lime
 import lime.lime_tabular
 
 
 class LimeExplainer(Explainer):
     """
-    TODO: write
+    Implementation of the Lime Explainer onto the base Explainer class
     """
 
     def __init__(self, data, predict_fn, discretize_continuous=True):
         """
-        TODO: write
+        Initializes a Lime explainer
 
-        :param data: data
-        :param predict_fn: predict_proba
-        :param discretize_continuous: dis
+        :param data: data that is supposed to be explained
+        :param predict_fn: classification model that is supposed to be explained
+        :param discretize_continuous: should continuous values be separated into discrete categories
         """
 
         self.categorical_features = data.categorical_features
@@ -62,31 +59,31 @@ class LimeExplainer(Explainer):
 
     def explain_instance(self, instance, num_features=10):
         instance = self.transform_dataset(instance, self.data).iloc[0]
-        self.explanation = self.explainer.explain_instance(instance,
-                                                           lambda x: self.predict(self.inverse_transform_dataset(pd.DataFrame(x, columns=self.train.keys()), self.data)),
-                                                           num_features=num_features)
+        self.explanation = self.explainer.explain_instance(
+            instance, lambda x: self.predict(self.inverse_transform_dataset(
+                pd.DataFrame(x, columns=self.train.keys()), self.data)), num_features=num_features)
         self.instance = instance
         self.weighted_instances = self.get_weighted_instances()
 
         return self.explanation
 
-
-    # Helper function for accessing the predictions of lime's surrogate model
     def predict_instance_surrogate(self, instance):
+        """
+        Helper function for accessing the predictions of lime's surrogate model
+        :param instance: instance whose prediction should be provided
+        :return: label prediction of given instance
+        """
         return np.clip(self.explanation.intercept[1] + sum(weight * ((instance - self.explainer.scaler.mean_) /
                                                                      self.explainer.scaler.scale_)[idx]
                                                            for idx, weight in self.explanation.local_exp[1]), 0, 1)
-
 
     @xb.prop
     def shape(self):
         return 'Exponential kernel'
 
-
     @xb.prop
     def name(self):
         return 'Lime'
-
 
     @xb.metric
     def area_absolute(self):
@@ -97,13 +94,11 @@ class LimeExplainer(Explainer):
         kernel_dimension = self.train.shape[1]
         return (kernel_width * np.sqrt(2 * np.pi)) ** kernel_dimension
 
-
     @xb.metric
     def coverage(self):
         """
         Proportion of instances covered in the area
         """
-        weighted_instances = self.weighted_instances
         return sum([weight for _, weight in self.weighted_instances]) / len(self.weighted_instances)
 
     @xb.metric
@@ -115,6 +110,10 @@ class LimeExplainer(Explainer):
 
     @xb.metric
     def distance_furthest(self):
+        """
+        Highest distance between any two instances that are in the neighborhood of the explanation
+        :return: distance value
+        """
         kernel_width = np.sqrt(self.train.shape[1]) * .75
 
         def kernel(distance):
@@ -124,7 +123,6 @@ class LimeExplainer(Explainer):
         distance_instances = (self.distance(self.instance, instance) for instance in training_instances)
         weighted_distances = (distance * kernel(distance) for distance in distance_instances)
         return sum(weighted_distances)
-
 
     @xb.metric
     def accuracy(self):
@@ -139,7 +137,6 @@ class LimeExplainer(Explainer):
         exp_preds = np.array(exp_preds) > 0.5
         weights = np.array([weight for _, weight in self.weighted_instances])
         return ((ml_preds == exp_preds) * weights).sum() / sum(weights)
-
 
     @xb.metric
     def balance_explanation(self):
@@ -157,7 +154,6 @@ class LimeExplainer(Explainer):
             weights = np.array([weight for _, weight in self.weighted_instances])
             return (exp_preds * weights).sum() / sum(weights)
 
-
     @xb.metric
     def balance_model(self):
         """
@@ -166,13 +162,11 @@ class LimeExplainer(Explainer):
         :return: the balance value
         """
         if hasattr(self, 'explanation'):
-
             ml_preds = self.predict(self.inverse_transform_dataset(self.train, self.data))
             ml_preds = ml_preds[:,1] > 0.5
             
             weights = np.array([weight for _, weight in self.weighted_instances])
             return (ml_preds * weights).sum() / sum(weights)
-
 
     @xb.metric
     def balance_data(self):
@@ -185,29 +179,34 @@ class LimeExplainer(Explainer):
             weights = np.array([weight for _, weight in self.weighted_instances])
             return sum((self.data.target.to_numpy().reshape((-1,)) == self.data.target_names[1]) * weights) / sum(weights)
 
-
     @xb.metric
     def accuracy_global(self):
         """
         Proportion of instances in the full data space that shares the same output label by the
         explainer and the ML model
         """
-
         ml_preds = self.predict(self.inverse_transform_dataset(self.train, self.data))
         ml_preds = ml_preds[:,1] > 0.5
         exp_preds = [self.predict_instance_surrogate(instance) for instance,_ in self.weighted_instances]
         exp_preds = np.array(exp_preds) > 0.5
         return (ml_preds == exp_preds).sum() / len(ml_preds)
 
-
-
     @xb.utility
     def distance(self, x, y):
+        """
+        calculates the euclidean distance between two data points
+        :param x: first point
+        :param y: second point
+        :return: distance
+        """
         return np.linalg.norm(x - y)
-
 
     @xb.utility
     def get_weighted_instances(self):
+        """
+        returns instances associated with their weight concerning the explanation
+        :return: List of tuples with instance and its weight
+        """
         if hasattr(self, 'explanation'):
             kernel_width = np.sqrt(self.train.shape[1]) * .75
 
@@ -218,14 +217,12 @@ class LimeExplainer(Explainer):
                     for instance in self.train.to_numpy()]
         return []
 
-
     @xb.utility
     def get_explained_instance(self):
+        """
+        Returns instance that was explained
+        :return: instance
+        """
         return self.instance
-
-
-    @xb.utility
-    def get_training_data(self):
-        return self.train
 
 

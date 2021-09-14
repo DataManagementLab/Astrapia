@@ -1,6 +1,5 @@
 import json
 import textwrap
-
 import plotly.graph_objects as go
 
 
@@ -104,6 +103,7 @@ def load_metrics_from_json(path):
     """
     with open(path) as json_file:
         return json.load(json_file)
+
 
 def print_properties(data):
     """

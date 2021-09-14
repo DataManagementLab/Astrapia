@@ -74,14 +74,18 @@ class Explainer:
         if printing:
             print('inferred metrics:', {x for x in dir(self) if getattr(getattr(self, x), 'tag', None) in ['metric', 'utility']})
         
-    def report(self, tag=None) -> dict:
+    def report(self, tag=None, inferred_metrics=True) -> dict:
         """
         Compute metrics and properties for this explainer.
         If a tag is supplied, only the respective type of attribute is returned (metrics or properties)
 
+        :param inferred_metrics:
         :param tag: *None* or 'prop' or 'metric'
         :return: a dictionary of metrics
         """
+        if inferred_metrics:
+            self.infer_metrics()
+
         if tag is None:
             all_mu_identifier_references = {(x, getattr(self, x)) for x in dir(self) if getattr(getattr(self, x), 'tag', None) in ['metric', 'prop']}
         elif tag == 'metric':
@@ -93,9 +97,3 @@ class Explainer:
             
         implemented_mu_values = {(x, f()) for (x, f) in all_mu_identifier_references}
         return implemented_mu_values
-
-
-
-
-
-

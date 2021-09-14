@@ -39,9 +39,12 @@ class AnchorsExplainer(Explainer):
         result = {
             'labels': (meta.target == meta.target_names[-1]).astype(int).to_numpy().reshape((-1,)),
             'class_names': meta.target_names,
-            'ordinal_features': [i for i, label in (enumerate(meta.feature_names)) if label not in meta.categorical_features.keys()],
-            'categorical_features': [i for i, label in (enumerate(meta.feature_names)) if label in meta.categorical_features.keys()],
-            'categorical_names': {idx: [str(x) for x in meta.categorical_features[feature]] for idx, feature in enumerate(meta.feature_names) if feature in meta.categorical_features},
+            'ordinal_features': [i for i, label in (enumerate(meta.feature_names)) if label not
+                                 in meta.categorical_features.keys()],
+            'categorical_features': [i for i, label in (enumerate(meta.feature_names)) if label
+                                     in meta.categorical_features.keys()],
+            'categorical_names': {idx: [str(x) for x in meta.categorical_features[feature]] for idx, feature
+                                  in enumerate(meta.feature_names) if feature in meta.categorical_features},
             'feature_names': meta.feature_names,
             'data': data.to_numpy()
         }
@@ -55,7 +58,8 @@ class AnchorsExplainer(Explainer):
     def inverse_transform_dataset(self, data: any, meta: xb.Dataset) -> pd.DataFrame:
         df = pd.DataFrame(data['data'], columns=meta.feature_names)
         for feature_idx in [i for i, label in (enumerate(meta.data.keys())) if label in meta.categorical_features.keys()]:
-            df[meta.feature_names[feature_idx]] = df[meta.feature_names[feature_idx]].map(lambda entry: meta.categorical_features[meta.feature_names[feature_idx]][entry])
+            df[meta.feature_names[feature_idx]] = df[meta.feature_names[feature_idx]].map(
+                lambda entry: meta.categorical_features[meta.feature_names[feature_idx]][entry])
         return df
 
     def explain_instance(self, instance):
@@ -176,26 +180,19 @@ class AnchorsExplainer(Explainer):
                 return np.count_nonzero(ml_pred == explanation_label) / len(relevant_examples)
 
     @xb.utility
-    def get_neighborhood_instances(self):
-        """
-        Receive all data elements in the given subset that belong to the neighborhood of the explanation
-        
-        :return: ndarray of elements
-        """
-        if hasattr(self, 'explanation'):
-            fit_anchor = self.get_fit_anchor(self.instance_set)
-            return self.instance_set[fit_anchor]
-        return []
-
-    @xb.utility
     def get_fit_anchor(self, dataset):
+        """
+        Returns indices of data elements that are in the explanation neighborhood
+        :param dataset: provided dataset
+        :return: indices as numpy array
+        """
         return np.where(np.all(dataset[:, self.explanation.features()] ==
                                self.instance[self.explanation.features()], axis=1))[0]
 
     @xb.utility
     def get_explained_instance(self):
+        """
+        Returns instance that was explained
+        :return: instance
+        """
         return self.instance
-
-    @xb.utility
-    def distance(self, x, y):
-        return np.linalg.norm(x-y)

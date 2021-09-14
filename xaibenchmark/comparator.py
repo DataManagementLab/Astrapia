@@ -6,6 +6,7 @@ import json
 from tqdm import tqdm
 import pandas as pd
 
+
 class ExplainerComparator:
     """
     A comparator that allows the user to add explainers, let them explain instances and store metrics from the
@@ -38,24 +39,25 @@ class ExplainerComparator:
 
     def add_explainer(self, explainer: xb.Explainer, name: str):
         """
-        Add an instantiated explainer to the comparator. 
-        Use the name attribute for uniquely identifying different explainers (E.g. between 'Anchors acc>95%' and 'Anchors acc>85%')
+        Add an instantiated explainer to the comparator. Use the name attribute for uniquely identifying different
+        explainers (E.g. between 'Anchors acc>95%' and 'Anchors acc>85%')
 
         :param explainer: explainer object
         :param name: unique name for identifying the explainer
         """
 
         explainer_properties = {}
-        for (prop, value) in explainer.report(tag='prop'):
+        for (prop, value) in explainer.report(tag='prop', inferred_metrics=False):
             explainer_properties[prop] = value
 
         self.explainers[name] = explainer
         self.properties[name] = explainer_properties
 
-    def explain_instances(self, instances: pd.DataFrame):
+    def explain_instances(self, instances: pd.DataFrame, inferred_metrics=False):
         """
         Create explanations for all combinations of provided explainers and instances, then save metrics
 
+        :param inferred_metrics: Check whether you want to include inferred metrics in the report
         :param instances: instances to be used to create explanations as pandas dataframe
         """
 
@@ -64,7 +66,6 @@ class ExplainerComparator:
         self.explanations = {}
         self.metrics = {}
         self.instances = instances
-        self.timestamp = ''
 
         # Initialize tqdm progress bar
         with tqdm(total=len(self.explainers.keys()) * len(instances)) as pbar:
@@ -80,7 +81,7 @@ class ExplainerComparator:
                     explanation = explainer.explain_instance(instances.iloc[[index]])
 
                     explanation_metrics = {}
-                    for (metric, value) in explainer.report(tag='metric'):
+                    for (metric, value) in explainer.report(tag='metric', inferred_metrics=inferred_metrics):
                         # add up metrics in order to compute average values later
                         explainer_average_metrics[metric] += value
                         # save metrics of the explanation separately
@@ -93,22 +94,25 @@ class ExplainerComparator:
                     pbar.update(1)
 
                 # compute average metrics by dividing added metrics by the amount of provided instances
-                explainer_average_metrics = {metric: value/instances.shape[0]
-                                            for metric, value in explainer_average_metrics.items()}
+                explainer_average_metrics = {metric: value / instances.shape[0]
+                                             for metric, value in explainer_average_metrics.items()}
 
                 self.averaged_metrics[name] = explainer_average_metrics
                 self.metrics[name] = aggregated_explainer_metrics
                 self.explanations[name] = aggregated_explanations
             self.timestamp = str(datetime.now())
 
-    def explain_representative(self, data: xb.Dataset, sampler:str='splime', count:int=10, pred_fn=None, return_samples:bool=False, **kwargs):
+    def explain_representative(self, data: xb.Dataset, sampler: str = 'splime', count: int = 10, pred_fn=None,
+                               return_samples: bool = False, inferred_metrics=False, **kwargs):
         """
         Create a representative explanation for the given data
 
+        :param inferred_metrics: Check whether you want to include inferred metrics in the report
+        :param return_samples: Check whether sampled elements should be returned
+        :param pred_fn: Provide optional prediction function for sampling
         :param data: pandas dataframe with the data to be explained
         :param sampler: sampler to be used to create representative explanation
         :param count: amount of representative samples to be created
-        :param verbose: print details of the created explanation       
         """
 
         # Map sampler names to objects
@@ -117,7 +121,7 @@ class ExplainerComparator:
             'random': random.RandomSampler,
             'splime': splime.SPLimeSampler,
         }
-        
+
         if issubclass(type(sampler), base_sampler.Sampler):
             # sampler is an object
             sampler = sampler()
@@ -126,14 +130,14 @@ class ExplainerComparator:
             sampler = sampler_map[sampler]()
         else:
             # sampler is unknown
-            raise NameError('Invalid sampler \''+sampler+'\'')
+            raise NameError('Invalid sampler \'' + sampler + '\'')
 
         # sampler is now a Sampler object
         # sample instances and explain them
         instances = sampler.sample(data, count, pred_fn, **kwargs)
 
         # relay the samples instances to the regular explain_instances function
-        self.explain_instances(instances)
+        self.explain_instances(instances, inferred_metrics=inferred_metrics)
 
         if return_samples:
             return instances
@@ -158,5 +162,3 @@ class ExplainerComparator:
         """
         return {'timestamp': self.timestamp, 'explainers': list(self.explainers.keys()), 'properties': self.properties,
                 'averaged_metrics': self.averaged_metrics, 'separate_metrics': self.metrics}
-
-
