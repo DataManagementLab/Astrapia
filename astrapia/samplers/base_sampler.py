@@ -1,4 +1,4 @@
-import xaibenchmark as xb
+import astrapia as xb
 
 class Sampler:
     """

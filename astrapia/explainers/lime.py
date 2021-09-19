@@ -1,6 +1,6 @@
 import numpy as np
-from xaibenchmark import Explainer
-import xaibenchmark as xb
+from astrapia import Explainer
+import astrapia as xb
 import pandas as pd
 import lime
 import lime.lime_tabular

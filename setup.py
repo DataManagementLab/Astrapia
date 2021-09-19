@@ -1,8 +1,8 @@
 from setuptools import setup
 
-setup(name='xaibenchmark',
+setup(name='astrapia',
         version='0.1',
         description='Benchmark for local model-agnostic explainers',
         url='',
-        packages=['xaibenchmark'],
+        packages=['astrapia'],
         zip_safe=False)

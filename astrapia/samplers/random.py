@@ -1,5 +1,5 @@
-from xaibenchmark.samplers.base_sampler import Sampler
-import xaibenchmark as xb
+from astrapia.samplers.base_sampler import Sampler
+import astrapia as xb
 import random
 
 class RandomSampler(Sampler):

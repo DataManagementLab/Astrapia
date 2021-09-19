@@ -3,7 +3,7 @@ Explainers
 *******************
 Explainers are used to explain the behavour of an arbitrary machine learning model.
 
-.. autoclass:: xaibenchmark.Explainer
+.. autoclass:: astrapia.Explainer
     :members: metrics, props, report, explain_instance
 
     .. method:: infer_metrics(printing=True)

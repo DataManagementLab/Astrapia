@@ -1,5 +1,5 @@
 import inspect
-import xaibenchmark as xb
+import astrapia as ast
 from functools import partial
 
 _transferlist = [] # variable keeping track of loaded transfer functions
@@ -18,7 +18,7 @@ def use_transfer(obj):
     while new_mu_identifiers != old_mu_identifiers:
         for transition in _transferlist:
             if set(transition[0]) <= new_mu_identifiers and transition[1] not in new_mu_identifiers:
-                setattr(obj, transition[1], xb.metric(partial(transition[2], obj)))
+                setattr(obj, transition[1], ast.metric(partial(transition[2], obj)))
                 
         old_mu_identifiers = new_mu_identifiers
         new_mu_identifiers = {x for x in dir(obj) if getattr(getattr(obj, x), 'tag', None) == 'metric'}

@@ -1,7 +1,7 @@
 import numpy as np
-from xaibenchmark.explainer import Explainer
-from xaibenchmark.explainers.DLime.explainer_tabular import LimeTabularExplainer as DLimeTabularExplainer
-import xaibenchmark as xb
+from astrapia.explainer import Explainer
+from astrapia.explainers.DLime.explainer_tabular import LimeTabularExplainer as DLimeTabularExplainer
+import astrapia as xb
 from sklearn.neighbors import NearestNeighbors
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.linear_model import LinearRegression

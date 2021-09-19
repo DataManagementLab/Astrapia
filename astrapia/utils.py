@@ -1,6 +1,6 @@
 from sklearn import metrics
 import pandas as pd
-import xaibenchmark as xb
+import astrapia as xb
 
 
 def model_properties(y_test, modelpredictions, labels=[]):

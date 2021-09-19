@@ -4,7 +4,7 @@ Installation
 
 
 
-Run the following command to install necessary dependencies. A symbolic link will be built to *xaibenchmark* allowing you to change the source code without reinstallation.
+Run the following command to install necessary dependencies. A symbolic link will be built to *astrapia* allowing you to change the source code without reinstallation.
 
 .. code-block:: bash
 

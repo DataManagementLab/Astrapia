@@ -5,7 +5,7 @@ As explaining many instances can take a large amount of time, Astrapia provides 
 This classes goal is to choose representative samples given a dataset and a strategy. By only having to explain representative samples, 
 computation time can be drastically reduced while still representing most of the dataset.
 
-.. autoclass:: xaibenchmark.samplers.base_sampler.Sampler
+.. autoclass:: astrapia.samplers.base_sampler.Sampler
 
     .. automethod:: sample
 
@@ -35,14 +35,14 @@ To allow users to quickly start benchmarking Explainers, Astrapia includes some 
 SP-Lime Sampler 
 ********************
 
-.. autoclass:: xaibenchmark.samplers.splime.SPLimeSampler
+.. autoclass:: astrapia.samplers.splime.SPLimeSampler
 
     .. automethod:: sample
 
 Random Sampler
 ****************
 
-.. autoclass:: xaibenchmark.samplers.random.RandomSampler
+.. autoclass:: astrapia.samplers.random.RandomSampler
 
     .. automethod:: sample
 

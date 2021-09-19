@@ -23,7 +23,7 @@ comparing them in the log domain is visually much more appealing.
 
 .. code-block:: python
 
-    from xaibenchmark import transfer # import the transfer module
+    from astrapia import transfer # import the transfer module
     import math # import math for the log function
 
     # define a new metric depending on the *area_absolute* metric
