@@ -19,6 +19,7 @@ def basic_information(bunch):
 def feature_information(bunch, feature, dataset="train"):
     """
     Prints information on the data specific to a feature of the dataset
+
     :param bunch: sk-learn Bunch object
     :param feature: name of the desired feature
     :param dataset: either train, dev or test depending on which subset is relevant
@@ -64,6 +65,7 @@ def feature_information(bunch, feature, dataset="train"):
 def choose_dataset(bunch, dataset):
     """
     Returns a desired subset of the given dataset
+
     :param bunch: sk-learn Bunch
     :param dataset: String representation of subset, either train, dev or test
     :return: subset as pandas dataframe

@@ -7,6 +7,7 @@ def normalize(dicts, relevant_metrics):
     """
     Normalize non-relative metric values in order to visualize them side-by-side with relative metrics.
     If there is only one value for a non-relative metric, it is left out of the result.
+
     :param dicts: dictionary of metrics
     :param relevant_metrics: list of metric names that should be normalized if they are non-relative
     :return: dictionary of metrics with adjusted values
@@ -57,6 +58,7 @@ def fill_in_value(metric_dict, metric, numeric=True):
     """
     Given the name of a metric and a dict that may have a value for it, return the rounded value or a dash sign in case
     the metric does not exist in the dict
+
     :param numeric: information whether numeric values are handled
     :param metric_dict: dictionary of metrics and their respective value
     :param metric: name of the metric
@@ -74,6 +76,7 @@ def fill_in_value(metric_dict, metric, numeric=True):
 def round_table_value(value):
     """
     Given a value, return it as rounded string
+
     :param value: metric value
     :return: rounded value as String
     """
@@ -87,6 +90,7 @@ def round_table_value(value):
 def normalize_balance(metric, value):
     """
     Balance-related values are normalised to [0,1], having a higher value the closer they are to 0.5
+
     :param metric: name of the metric
     :param value: value of the metric
     :return: metric name, normalized metric value
@@ -100,6 +104,7 @@ def normalize_balance(metric, value):
 def load_metrics_from_json(path):
     """
     Load metric data from a file where metric data has been stored
+
     :param path: path to .json file
     :return: metric data as dictionary
     """
@@ -110,6 +115,7 @@ def load_metrics_from_json(path):
 def print_properties(data):
     """
     prints properties of explainers as table
+
     :param data: data as returned by Comparator
     """
 
@@ -140,6 +146,7 @@ def print_properties(data):
 def print_metrics(data, explainer=None, index=None, plot='table', show_metric_with_one_value=True):
     """
     Output metrics of the explanations on the console. Either averaged metrics or metrics from single explanations
+
     :param data: dictionary with metrics data
     :param explainer: Optional, in case you only want metrics from one explainer
     :param index: Optional, in case you only want metrics from one explanation
@@ -182,7 +189,7 @@ def print_metrics(data, explainer=None, index=None, plot='table', show_metric_wi
             fig = go.Figure([go.Bar(x=[metric for metric, _ in normalized_pair],
                                     y=[value for _, value in normalized_pair],
                                     text=[round(value, 3) for _, value in normalized_pair],
-                                    textposition='auto')])
+                                    textposition='outside')])
             fig.update_layout(title_text=header, plot_bgcolor='#fffaf4', height=600, margin=dict(l=20, r=20, t=60, b=200))
             annotation = textwrap.wrap("Non-relative metrics are not shown here because they cannot be compared with "
                                        "relative values in the same plot. Balance-related metrics were rescaled to "
@@ -252,7 +259,7 @@ def print_metrics(data, explainer=None, index=None, plot='table', show_metric_wi
                                          x=[metric for metric, _ in normalized_pair],
                                          y=[value for _, value in normalized_pair],
                                          text=[round(value, 3) for _, value in normalized_pair],
-                                         textposition='auto',
+                                         textposition='outside',
                                          marker={'color': col[name]})
                                   for (name, normalized_pair) in normalized_metrics])
             fig.update_layout(barmode='group', title_text=f'Metric Comparison', plot_bgcolor='#ececea',

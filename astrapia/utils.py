@@ -6,6 +6,8 @@ import astrapia as xb
 def model_properties(y_test, modelpredictions, labels=[]):
     """
     Returns a dictionary containing accuracy, precision, f1-score, etc.
+
+    :return: dictionary with attributes
     """
     
     if len(y_test) != len(modelpredictions) :
