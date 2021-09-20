@@ -18,6 +18,7 @@ Astrapia is **not** a framework for ranking explainers. It barely aids users in 
 
    installation
    math
+   metric_ref
    dataset
    explainers
    comparator
