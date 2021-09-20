@@ -53,18 +53,20 @@ def normalize(dicts, relevant_metrics):
     return res
 
 
-def fill_in_value(metric_dict, metric):
+def fill_in_value(metric_dict, metric, numeric=True):
     """
     Given the name of a metric and a dict that may have a value for it, return the rounded value or a dash sign in case
     the metric does not exist in the dict
+    :param numeric: information whether numeric values are handled
     :param metric_dict: dictionary of metrics and their respective value
     :param metric: name of the metric
     :return: metric value as String
     """
     if metric in metric_dict:
-        if isinstance(metric, str):
+        if not numeric:
             return metric_dict[metric]
-        return round_table_value(metric_dict[metric])
+        else:
+            return round_table_value(metric_dict[metric])
     else:
         return '-'
 
@@ -77,7 +79,7 @@ def round_table_value(value):
     """
     str_value = str(value)
     if 'e' in str_value:
-        return str_value[:8] + str_value[str_value.index('e'):]
+        return str_value[:6] + str_value[str_value.index('e'):]
     else:
         return round(value, 6)
 
@@ -118,7 +120,7 @@ def print_properties(data):
 
     for name, properties in data['properties'].items():
         headline += [name]
-        explainer_values = [fill_in_value(properties, prop) for prop in all_properties]
+        explainer_values = [fill_in_value(properties, prop, False) for prop in all_properties]
         values.append(explainer_values)
 
     fig = go.Figure(data=[go.Table(
