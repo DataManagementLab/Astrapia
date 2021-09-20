@@ -98,6 +98,10 @@ class LimeExplainer(Explainer):
     def name(self):
         return 'Lime'
 
+    @xb.prop
+    def instancing(self):
+        return 'weighted'
+
     @xb.metric
     def area_absolute(self):
         """

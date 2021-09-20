@@ -118,6 +118,10 @@ class DLimeExplainer(Explainer):
     def name(self):
         return 'DLime'
 
+    @xb.prop
+    def instancing(self):
+        return 'weighted'
+
     @xb.metric
     def area_absolute(self):
         """

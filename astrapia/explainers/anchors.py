@@ -86,6 +86,10 @@ class AnchorsExplainer(Explainer):
     def name(self):
         return 'Anchors'
 
+    @xb.prop
+    def instancing(self):
+        return 'binary'
+
     @xb.metric
     def coverage(self):
         """
