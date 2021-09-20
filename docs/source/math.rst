@@ -21,24 +21,25 @@ Definitions
     denotes the true target label of :math:`x`. 
     As Astrapia is limited to binary classification, :math:`f(x)\in \{0,1\}` holds.
 
-:math:`y(x)`
-    denotes the predicted label for the instance :math:`x`. 
-    As the model might return probabilities, :math:`y(x) \in [0,1]` and not just :math:`\{0,1\}`.
+:math:`y_t(x)`
+    denotes the predicted label for the instance :math:`x` where :math:`t` is either *model* or *explainer*. 
+    Not every explainer is able to do prediction of their own. As such :math:`y_{explainer}(x)` is undefined for them.
+    As the model might return probabilities, :math:`y_t(x) \in [0,1]` and not just :math:`\{0,1\}`.
 
-:math:`\hat y(x)`
+:math:`\hat y_t(x)`
     is defined as 
 
     .. math::
-        \hat y(x) =
+        \hat y_t(x) =
             \left\{
                 \begin{array}{ll}
-                    0  & \mbox{if } y(x) \geq 0.5 \\
-                    1 & \mbox{if } y(x) < 0.5
+                    0  & \mbox{if } y_t(x) \geq 0.5 \\
+                    1 & \mbox{if } y_t(x) < 0.5
                 \end{array}
             \right.
 
-    while :math:`y(x)` represents a probabiliy distribution, 
-    :math:`\hat y(x)` represents the most likely label.
+    while :math:`y_t(x)` represents a probabiliy distribution, 
+    :math:`\hat y_t(x)` represents the most likely label.
 
 :math:`D_i`
     is the domain of the i'th feature of :math:`D`
