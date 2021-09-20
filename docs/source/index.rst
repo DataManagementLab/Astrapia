@@ -24,6 +24,7 @@ Astrapia is **not** a framework for ranking explainers. It barely aids users in 
    comparator
    transfer
    sampler
+   developers
 
 
 Quickstart

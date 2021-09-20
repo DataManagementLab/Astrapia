@@ -3,7 +3,7 @@ Metric and Property Reference
 The following metrics are supported by default. 
 By following them, you can be sure that pre-implemented 
 Astrapia explainers include your metrics. You may extend them as needed. 
-For additional info about mathematical definitions, view :doc:`math`.
+For additional info about mathematical definitions, view the :doc:`math`.
 
 
 .. py:function:: accuracy(self)

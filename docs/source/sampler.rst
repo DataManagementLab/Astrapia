@@ -1,4 +1,4 @@
-Sampler
+Samplers
 ==========
 
 As explaining many instances can take a large amount of time, Astrapia provides the Sampler_ class.
