@@ -38,6 +38,7 @@ class LimeExplainer(Explainer):
     def transform_dataset(self, data: pd.DataFrame, meta: xb.Dataset) -> any:
         """
         Returns the onehot encoded dataset
+
         :param data: given dataset
         :param meta: metadata with categorical information
         :return: One-hot encoded DataFrame
@@ -66,6 +67,7 @@ class LimeExplainer(Explainer):
     def explain_instance(self, instance, num_features=10):
         """
         Creates a dlime explanation based on a given instance
+
         :param instance: instance as dataframe
         :param num_features: amount of features in the dataset
         :return: the explanation
@@ -83,6 +85,7 @@ class LimeExplainer(Explainer):
     def predict_instance_surrogate(self, instance):
         """
         Helper function for accessing the predictions of lime's surrogate model
+
         :param instance: instance whose prediction should be provided
         :return: label prediction of given instance
         """
@@ -106,6 +109,8 @@ class LimeExplainer(Explainer):
     def area_absolute(self):
         """
         Area that is covered by the kernel in high dimension of the feature space.
+
+        :return: the area value
         """
         kernel_width = np.sqrt(self.train.shape[1]) * .75
         kernel_dimension = self.train.shape[1]
@@ -115,6 +120,8 @@ class LimeExplainer(Explainer):
     def coverage(self):
         """
         Proportion of instances covered in the area
+
+        :return: the coverage value
         """
         return sum([weight for _, weight in self.weighted_instances]) / len(self.weighted_instances)
 
@@ -122,6 +129,8 @@ class LimeExplainer(Explainer):
     def coverage_absolute(self):
         """
         Number of instances within the neighbourhood.
+
+        :return: the coverage value
         """
         return sum(weight for _, weight in self.weighted_instances)
 
@@ -129,6 +138,7 @@ class LimeExplainer(Explainer):
     def distance_furthest(self):
         """
         Highest distance between any two instances that are in the neighborhood of the explanation
+
         :return: distance value
         """
         kernel_width = np.sqrt(self.train.shape[1]) * .75
@@ -146,6 +156,8 @@ class LimeExplainer(Explainer):
         """
         Proportion of instances in the explanation neighborhood that shares the same output label by the
         explainer and the ML model
+
+        :return: the accuracy value
         """
 
         ml_preds = self.predict(self.inverse_transform_dataset(self.train, self.data))
@@ -160,6 +172,7 @@ class LimeExplainer(Explainer):
         """
         Relative amount of data elements in the explanation neighborhood that had an assigned label value of 1
         (by the explanation)
+
         :return: the balance value
         """
         
@@ -176,6 +189,7 @@ class LimeExplainer(Explainer):
         """
         Relative amount of data elements in the neighborhood of the explanation that had a label value of 1 assigned
         by the classification model
+
         :return: the balance value
         """
         if hasattr(self, 'explanation'):
@@ -189,6 +203,7 @@ class LimeExplainer(Explainer):
     def balance_data(self):
         """
         Relative amount of data elements in the neighborhood of the explanation with a label value of 1
+
         :return: the balance value
         """
         if hasattr(self, 'explanation'):
@@ -201,6 +216,8 @@ class LimeExplainer(Explainer):
         """
         Proportion of instances in the full data space that shares the same output label by the
         explainer and the ML model
+
+        :return: the accuracy value
         """
         ml_preds = self.predict(self.inverse_transform_dataset(self.train, self.data))
         ml_preds = ml_preds[:,1] > 0.5
@@ -212,6 +229,7 @@ class LimeExplainer(Explainer):
     def distance(self, x, y):
         """
         calculates the euclidean distance between two data points
+
         :param x: first point
         :param y: second point
         :return: distance
@@ -222,6 +240,7 @@ class LimeExplainer(Explainer):
     def get_weighted_instances(self):
         """
         returns instances associated with their weight concerning the explanation
+
         :return: List of tuples with instance and its weight
         """
         if hasattr(self, 'explanation'):
@@ -238,6 +257,7 @@ class LimeExplainer(Explainer):
     def get_explained_instance(self):
         """
         Returns instance that was explained
+
         :return: instance
         """
         return self.instance

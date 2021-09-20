@@ -187,6 +187,7 @@ class AnchorsExplainer(Explainer):
     def get_fit_anchor(self, dataset):
         """
         Returns indices of data elements that are in the explanation neighborhood
+
         :param dataset: provided dataset
         :return: indices as numpy array
         """
@@ -197,6 +198,7 @@ class AnchorsExplainer(Explainer):
     def get_explained_instance(self):
         """
         Returns instance that was explained
+
         :return: instance
         """
         return self.instance
