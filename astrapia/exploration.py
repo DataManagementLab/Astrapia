@@ -1,6 +1,7 @@
 def basic_information(bunch):
     """
     Prints basic information on the data
+
     :param bunch: sk-learn Bunch object
     """
     train_count = len(bunch.data)
