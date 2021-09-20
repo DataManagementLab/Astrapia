@@ -6,7 +6,7 @@ The main goal of Astrapia is to allow simple comparison
 of explainers. The Comparator_ class allows for setting up 
 comparisons, storing, and visualizing them.  
 
-.. autoclass:: xaibenchmark.comparator.ExplainerComparator
+.. autoclass:: astrapia.comparator.ExplainerComparator
 
     .. automethod:: add_explainer
 
@@ -22,9 +22,9 @@ For details on how to initialize specific explainers, visit the :doc:`explainers
 
 .. code-block:: python
 
-    from xaibenchmark.comparator import ExplainerComparator
-    from xaibenchmark.dataset import load_dataset
-    from xaibenchmark.explainers import LimeExplainer, AnchorsExplainer
+    from astrapia.comparator import ExplainerComparator
+    from astrapia.dataset import load_dataset
+    from astrapia.explainers import LimeExplainer, AnchorsExplainer
 
     data = load_dataset(...) # load a dataset for comparing on
 

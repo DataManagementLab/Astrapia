@@ -1,6 +1,6 @@
 import numpy as np
-from xaibenchmark import Explainer
-import xaibenchmark as xb
+from astrapia import Explainer
+import astrapia as xb
 import pandas as pd
 import lime
 import lime.lime_tabular
@@ -36,6 +36,12 @@ class LimeExplainer(Explainer):
         self.kernel_width = np.sqrt(self.train.shape[1]) * .75
 
     def transform_dataset(self, data: pd.DataFrame, meta: xb.Dataset) -> any:
+        """
+        Returns the onehot encoded dataset
+        :param data: given dataset
+        :param meta: metadata with categorical information
+        :return: One-hot encoded DataFrame
+        """
 
         return xb.utils.onehot_encode(data, meta)
 
@@ -58,6 +64,13 @@ class LimeExplainer(Explainer):
         return df[meta.data.keys()]
 
     def explain_instance(self, instance, num_features=10):
+        """
+        Creates a dlime explanation based on a given instance
+        :param instance: instance as dataframe
+        :param num_features: amount of features in the dataset
+        :return: the explanation
+        """
+
         instance = self.transform_dataset(instance, self.data).iloc[0]
         self.explanation = self.explainer.explain_instance(
             instance, lambda x: self.predict(self.inverse_transform_dataset(
@@ -84,6 +97,10 @@ class LimeExplainer(Explainer):
     @xb.prop
     def name(self):
         return 'Lime'
+
+    @xb.prop
+    def instancing(self):
+        return 'weighted'
 
     @xb.metric
     def area_absolute(self):

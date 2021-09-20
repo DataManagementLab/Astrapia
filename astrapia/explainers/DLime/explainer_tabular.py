@@ -6,14 +6,14 @@ import warnings
 import numpy as np
 import sklearn
 import sklearn.preprocessing
-from xaibenchmark.explainers.DLime import explanation
-from xaibenchmark.explainers.DLime import explainer_base
+from astrapia.explainers.DLime import explanation
+from astrapia.explainers.DLime import explainer_base
 import sklearn.tree
 from sklearn.utils import check_random_state
-from xaibenchmark.explainers.DLime.discretize import QuartileDiscretizer
-from xaibenchmark.explainers.DLime.discretize import DecileDiscretizer
-from xaibenchmark.explainers.DLime.discretize import EntropyDiscretizer
-from xaibenchmark.explainers.DLime.discretize import BaseDiscretizer
+from astrapia.explainers.DLime.discretize import QuartileDiscretizer
+from astrapia.explainers.DLime.discretize import DecileDiscretizer
+from astrapia.explainers.DLime.discretize import EntropyDiscretizer
+from astrapia.explainers.DLime.discretize import BaseDiscretizer
 
 
 class TableDomainMapper(explanation.DomainMapper):

@@ -3,7 +3,7 @@ DLimeExplainer
 
 DLimeExplainer is a wrapper around dlime_.
 
-.. autoclass:: xaibenchmark.explainers.DLimeExplainer
+.. autoclass:: astrapia.explainers.DLimeExplainer
     :members: 
     :special-members:
 

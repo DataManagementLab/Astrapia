@@ -5,7 +5,7 @@ Astrapia datasets are used to unify dataset representations across different mod
 Each interface between a model and an explainer needs to support the following dataset format.
 
 
-.. autoclass:: xaibenchmark.Dataset
+.. autoclass:: astrapia.Dataset
     :members:
 
     The Dataset class represents a dataset. It should be able to capture diverse attributes of 

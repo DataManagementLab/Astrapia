@@ -1,7 +1,7 @@
 import numpy as np
 from anchor import anchor_tabular
-from xaibenchmark import Explainer
-import xaibenchmark as xb
+from astrapia import Explainer
+import astrapia as xb
 import pandas as pd
 
 
@@ -85,6 +85,10 @@ class AnchorsExplainer(Explainer):
     @xb.prop
     def name(self):
         return 'Anchors'
+
+    @xb.prop
+    def instancing(self):
+        return 'binary'
 
     @xb.metric
     def coverage(self):

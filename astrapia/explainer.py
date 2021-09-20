@@ -1,5 +1,5 @@
 from __future__ import print_function
-import xaibenchmark as xb
+import astrapia as xb
 import pandas as pd
 
 
@@ -66,7 +66,7 @@ class Explainer:
         Infer missing metrics for this explainer.
         Metrics are inferred using the transfer graph.
 
-        To add metric transfers, look into xaibenchmark.transfer
+        To add metric transfers, look into astrapia.transfer
 
         :param printing: whether to print the metrics or not
         """

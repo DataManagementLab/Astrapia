@@ -1,6 +1,6 @@
 from collections import defaultdict
-from xaibenchmark.samplers import base_sampler, random, splime
-import xaibenchmark as xb
+from astrapia.samplers import base_sampler, random, splime
+import astrapia as xb
 from datetime import datetime
 import json
 from tqdm import tqdm
