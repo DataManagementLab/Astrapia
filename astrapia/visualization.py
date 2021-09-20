@@ -149,6 +149,7 @@ def print_metrics(data, explainer=None, index=None, plot='table', show_metric_wi
 
     assert plot == 'bar' or plot == 'table', 'Wrong input. Check again.'
 
+    # Defining names and fetching data depending on the input parameters
     if explainer is not None:
         if index is not None:
             output = data['separate_metrics'][explainer][str(index)]
@@ -159,6 +160,7 @@ def print_metrics(data, explainer=None, index=None, plot='table', show_metric_wi
 
         pair = sorted(list(zip(output.keys(), output.values())), key=lambda tup: tup[0])
 
+        # Visualize the table
         if plot == 'table':
             fig = go.Figure(data=[go.Table(
                 header=dict(values=['metric', 'value'],
@@ -174,6 +176,7 @@ def print_metrics(data, explainer=None, index=None, plot='table', show_metric_wi
             fig.update_layout(title_text=header)
             fig.show()
 
+        # Visualize the plot and normalize balance
         elif plot == 'bar':
             normalized_pair = [normalize_balance(metric, value) for (metric, value) in pair if 0 <= value <= 1]
             fig = go.Figure([go.Bar(x=[metric for metric, _ in normalized_pair],
@@ -192,9 +195,11 @@ def print_metrics(data, explainer=None, index=None, plot='table', show_metric_wi
             fig.show()
 
     else:
+        # Retrieve all metrics from all explainers
         all_explainers = [x.keys() for x in data['averaged_metrics'].values()]
         relevant_metrics = sorted(list(set([item for sublist in all_explainers for item in sublist])))
 
+        # Filter metrics that only exist for one explainer
         if not show_metric_with_one_value:
             filtered_metrics = []
             for metric in relevant_metrics:
@@ -206,6 +211,7 @@ def print_metrics(data, explainer=None, index=None, plot='table', show_metric_wi
                     filtered_metrics.append(metric)
             relevant_metrics = filtered_metrics
 
+        # Visualize table
         if plot == 'table':
             headline = ['Metric']
             values = []
@@ -228,7 +234,15 @@ def print_metrics(data, explainer=None, index=None, plot='table', show_metric_wi
             fig.update_layout(title_text=f'Metrics from all explainers')
             fig.show()
 
+        # Visualize bar chart
         elif plot == 'bar':
+            # Defining a custom colorblind-friendly color palette
+            # Taken from https://jacksonlab.agronomy.wisc.edu/2016/05/23/15-level-colorblind-friendly-palette/
+            colors = ["#004949", "#ffff6d", "#009292", "#db6d00", "#490092", "#ff6db6", "#ffb6db", "#920000",
+                      "#006ddb", "#b6dbff", "#b66dff", "#24ff24", "#6db6ff"]
+            col = {n: c for (n, c) in zip(data["explainers"], colors[:len(data["explainers"])])}
+
+            # Normalizing metrics
             normalized_metrics = [(name, sorted(list(zip(metrics.keys(), metrics.values())),
                                                 key=lambda tup: tup[0]))
                                   for name, metrics in normalize(data['averaged_metrics'],
@@ -238,7 +252,8 @@ def print_metrics(data, explainer=None, index=None, plot='table', show_metric_wi
                                          x=[metric for metric, _ in normalized_pair],
                                          y=[value for _, value in normalized_pair],
                                          text=[round(value, 3) for _, value in normalized_pair],
-                                         textposition='auto')
+                                         textposition='auto',
+                                         marker={'color': col[name]})
                                   for (name, normalized_pair) in normalized_metrics])
             fig.update_layout(barmode='group', title_text=f'Metric Comparison', plot_bgcolor='#ececea',
                               height=600, margin=dict(l=20, r=20, t=60, b=200))
