@@ -1,3 +1,29 @@
+# ==============================================================================
+# We modified the code from Zafar's DLIME implementation publised on github
+#
+# MIT License
+#
+# Copyright (c) 2019 Rehman Zafar
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+# ==============================================================================
+
 import collections
 import copy
 from functools import partial
@@ -147,131 +173,6 @@ class LimeTabularExplainer(object):
     @staticmethod
     def convert_and_round(values):
         return ['%.2f' % v for v in values]
-
-    # def explain_instance(self,
-    #                      data_row,
-    #                      predict_fn,
-    #                      labels=(1,),
-    #                      top_labels=None,
-    #                      num_features=10,
-    #                      num_samples=5000,
-    #                      distance_metric='euclidean',
-    #                      model_regressor=None):
-    #     data, inverse = self.__data_inverse(data_row, num_samples)
-    #     scaled_data = (data - self.scaler.mean_) / self.scaler.scale_
-    #
-    #     distances = sklearn.metrics.pairwise_distances(
-    #             scaled_data,
-    #             scaled_data[0].reshape(1, -1),
-    #             metric=distance_metric
-    #     ).ravel()
-    #
-    #     yss = predict_fn(inverse)
-    #
-    #     # for classification, the model needs to provide a list of tuples - classes
-    #     # along with prediction probabilities
-    #     if self.mode == "classification":
-    #         if len(yss.shape) == 1:
-    #             raise NotImplementedError("LIME does not currently support "
-    #                                       "classifier models without probability "
-    #                                       "scores. If this conflicts with your "
-    #                                       "use case, please let us know: "
-    #                                       "https://github.com/datascienceinc/lime/issues/16")
-    #         elif len(yss.shape) == 2:
-    #             if self.class_names is None:
-    #                 self.class_names = [str(x) for x in range(yss[0].shape[0])]
-    #             else:
-    #                 self.class_names = list(self.class_names)
-    #             if not np.allclose(yss.sum(axis=1), 1.0):
-    #                 warnings.warn("""
-    #                 Prediction probabilties do not sum to 1, and
-    #                 thus does not constitute a probability space.
-    #                 Check that you classifier outputs probabilities
-    #                 (Not log probabilities, or actual class predictions).
-    #                 """)
-    #         else:
-    #             raise ValueError("Your model outputs "
-    #                              "arrays with {} dimensions".format(len(yss.shape)))
-    #
-    #     # for regression, the output should be a one-dimensional array of predictions
-    #     else:
-    #         try:
-    #             assert isinstance(yss, np.ndarray) and len(yss.shape) == 1
-    #         except AssertionError:
-    #             raise ValueError("Your model needs to output single-dimensional \
-    #                 numpyarrays, not arrays of {} dimensions".format(yss.shape))
-    #
-    #         predicted_value = yss[0]
-    #         min_y = min(yss)
-    #         max_y = max(yss)
-    #
-    #         # add a dimension to be compatible with downstream machinery
-    #         yss = yss[:, np.newaxis]
-    #
-    #     feature_names = copy.deepcopy(self.feature_names)
-    #     if feature_names is None:
-    #         feature_names = [str(x) for x in range(data_row.shape[0])]
-    #
-    #     values = self.convert_and_round(data_row)
-    #
-    #     for i in self.categorical_features:
-    #         if self.discretizer is not None and i in self.discretizer.lambdas:
-    #             continue
-    #         name = int(data_row[i])
-    #         if i in self.categorical_names:
-    #             name = self.categorical_names[i][name]
-    #         feature_names[i] = '%s=%s' % (feature_names[i], name)
-    #         values[i] = 'True'
-    #     categorical_features = self.categorical_features
-    #
-    #     discretized_feature_names = None
-    #     if self.discretizer is not None:
-    #         categorical_features = range(data.shape[1])
-    #         discretized_instance = self.discretizer.discretize(data_row)
-    #         discretized_feature_names = copy.deepcopy(feature_names)
-    #         for f in self.discretizer.names:
-    #             discretized_feature_names[f] = self.discretizer.names[f][int(
-    #                     discretized_instance[f])]
-    #
-    #     domain_mapper = TableDomainMapper(feature_names,
-    #                                       values,
-    #                                       scaled_data[0],
-    #                                       categorical_features=categorical_features,
-    #                                       discretized_feature_names=discretized_feature_names)
-    #     ret_exp = explanation.Explanation(domain_mapper,
-    #                                       mode=self.mode,
-    #                                       class_names=self.class_names)
-    #     ret_exp.scaled_data = scaled_data
-    #     if self.mode == "classification":
-    #         ret_exp.predict_proba = yss[0]
-    #         if top_labels:
-    #             labels = np.argsort(yss[0])[-top_labels:]
-    #             ret_exp.top_labels = list(labels)
-    #             ret_exp.top_labels.reverse()
-    #     else:
-    #         ret_exp.predicted_value = predicted_value
-    #         ret_exp.min_value = min_y
-    #         ret_exp.max_value = max_y
-    #         labels = [0]
-    #
-    #     for label in labels:
-    #         (ret_exp.intercept[label],
-    #          ret_exp.local_exp[label],
-    #          ret_exp.score[label], ret_exp.local_pred[label]) = self.base.explain_instance_with_data(
-    #                 scaled_data,
-    #                 yss,
-    #                 distances,
-    #                 label,
-    #                 num_features,
-    #                 model_regressor=model_regressor,
-    #                 feature_selection=self.feature_selection)
-    #
-    #     if self.mode == "regression":
-    #         ret_exp.intercept[1] = ret_exp.intercept[0]
-    #         ret_exp.local_exp[1] = [x for x in ret_exp.local_exp[0]]
-    #         ret_exp.local_exp[0] = [(i, -1 * j) for i, j in ret_exp.local_exp[1]]
-    #
-    #     return ret_exp
 
     def explain_instance_hclust(self,
                          data_row,
