@@ -7,7 +7,7 @@ import lime
 
 class SPLimeSampler(Sampler):
 
-    def sample(self, data: xb.Dataset, count: int, pred_fn, sample_size=5000, **kwargs):
+    def sample(self, data: xb.Dataset, count: int, pred_fn, sample_size=5000, *args, **kwargs):
         """
         Samples a dataset using the SPLime algorithm.
 

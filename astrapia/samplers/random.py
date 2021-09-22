@@ -4,7 +4,7 @@ import random
 
 class RandomSampler(Sampler):
 
-    def sample(self, data: xb.Dataset, n: int, **kwargs):
+    def sample(self, data: xb.Dataset, n: int, *args, **kwargs):
         """
         Sample n random elements from the dataset.
 
