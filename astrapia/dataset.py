@@ -11,12 +11,11 @@ def load_csv_data(dataset_name, root_path='data', seed=0):
     $name.data with a comma-separated training set, and a JSON file containing feature names (amongst other info).
 
     The default data directory ('data/') con be overwritten through the root_path parameter.
-    For exemplary data preparation, see data/adult/setup_adult.py
 
     :param seed: RNG seed for numpyRandomState
     :param dataset_name: name of the dataset, used for path/file names
     :param root_path: path to the root data directory, defaults to 'data/'
-    :return: data as an sklearn Bunch
+    :return: data as an astrapia.Dataset
     """
     path = os.path.join(root_path, dataset_name)
 
@@ -81,8 +80,18 @@ class Dataset(Bunch):
         target_test: pd.DataFrame = None,
         ) -> None:
         """
-        :param data:
-        :param categorical_features:
+        :param data: training data as pandas DataFrame
+        :param feature_names: list of feature names
+        :param categorical_features: dictionary of categorical features
+        :param target: target feature as pandas DataFrame
+        :param target_names: list of target feature values
+        :param target_name: name of the target feature
+        :param target_categorical: whether the target is categorical (currently only True supported)
+        :param name: name of the dataset
+        :param data_dev: development data as pandas DataFrame
+        :param target_dev: development target as pandas DataFrame
+        :param data_test: test data as pandas DataFrame
+        :param target_test: test target as pandas DataFrame
         """
         super(Dataset, self).__init__(
             name=name,

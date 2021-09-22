@@ -13,13 +13,18 @@ To solve this, Astrapia provides the Transfer_ module.
 By defining a new metric in terms of other metrics, the new metric 
 can be applied to all explainers
 
+
+
 Adding transfer functions
 **************************
 
-In this example we will implement the *area_absolute_log* metric. 
+In this example we will implement the ``area_absolute_log`` metric. 
 As absolute area tends to grow exponentially with the number of 
 dimensions the explainer considers, 
 comparing them in the log domain is visually much more appealing.
+
+
+.. autofunction:: astrapia.transfer.add_transfer
 
 .. code-block:: python
 
@@ -48,3 +53,6 @@ Inferring metrics needs to be explicitly started.
     exp = LimeExplainer(...) # instantiate an explainer
     exp.infer_metrics() # apply derived metrics on the explainer
 
+Alternatively, the ``use_transfer`` function can be used directly
+
+.. autofunction:: astrapia.transfer.use_transfer

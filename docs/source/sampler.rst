@@ -1,7 +1,9 @@
+.. _sampler:
+
 Samplers
 ==========
 
-As explaining many instances can take a large amount of time, Astrapia provides the Sampler_ class.
+As explaining many instances can take a large amount of time, Astrapia provides the :ref:`Sampler <sampler>` class.
 This classes goal is to choose representative samples given a dataset and a strategy. By only having to explain representative samples, 
 computation time can be drastically reduced while still representing most of the dataset.
 
@@ -11,8 +13,8 @@ computation time can be drastically reduced while still representing most of the
 
 Writing your own Sampler
 -----------------------------
-To write your own sampler, simply extend the Sampler_ class and implement the *sample* method. 
-You may require any additional arguments for the *sample* method. 
+To write your own sampler, simply extend the :ref:`Sampler <sampler>` class and implement the ``sample`` method. 
+You may require any additional arguments for the ``sample`` method. 
 However, if you want to share your sampler, make sure that missing arguments lead to well-explained exceptions.
 
 .. code-block:: python
