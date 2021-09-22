@@ -33,9 +33,7 @@ class AnchorsExplainer(Explainer):
             return predict_fn(self.inverse_transform_dataset({'data': data}, self.meta))[:,1] > 0.5
         self.predictor = transformed_predict
 
-
     def transform_dataset(self, data: pd.DataFrame, meta: xb.Dataset) -> any:
-
         result = {
             'labels': (meta.target == meta.target_names[-1]).astype(int).to_numpy().reshape((-1,)),
             'class_names': meta.target_names,
@@ -99,14 +97,14 @@ class AnchorsExplainer(Explainer):
         """
         if hasattr(self, 'explanation'):
             return self.explanation.coverage()
-        return np.nan
 
     @xb.metric
     def coverage_absolute(self):
         """
         Number of instances within the neighbourhood.
         """
-        return self.get_fit_anchor(self.anchors_dataset['data']).shape[0]
+        if hasattr(self, 'explanation'):
+            return self.get_fit_anchor(self.anchors_dataset['data']).shape[0]
 
     @xb.metric
     def accuracy_global(self):
@@ -117,7 +115,6 @@ class AnchorsExplainer(Explainer):
         """
         if hasattr(self, 'explanation'):
             return self.explanation.precision()
-        return np.nan
 
     @xb.metric
     def balance_explanation(self):
@@ -129,7 +126,8 @@ class AnchorsExplainer(Explainer):
         """
         # balance is always 0 or 1 because Anchors creates a neighborhood where all elements are supposed to have
         # the same label as the one that was used to instantiate the explanation
-        return int(self.explanation.exp_map["prediction"])
+        if hasattr(self, 'explanation'):
+            return int(self.explanation.exp_map["prediction"])
 
     @xb.metric
     def balance_model(self):
@@ -166,7 +164,6 @@ class AnchorsExplainer(Explainer):
             array = np.amax(self.anchors_dataset['data'], axis=0)[self.explanation.features()]
             array = array + 1
             return np.prod(1 / array)
-        return np.nan
 
     @xb.metric
     def accuracy(self):
