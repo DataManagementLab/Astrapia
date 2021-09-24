@@ -3,6 +3,8 @@ import json
 import pandas as pd
 from sklearn.utils import Bunch
 from numpy.random import RandomState
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
 
 
 def load_csv_data(dataset_name, root_path='data', seed=0):
@@ -17,6 +19,27 @@ def load_csv_data(dataset_name, root_path='data', seed=0):
     :param root_path: path to the root data directory, defaults to 'data/'
     :return: data as an astrapia.Dataset
     """
+    if dataset_name == 'breast':
+        data = load_breast_cancer(as_frame=True)
+        train, test = train_test_split(data.frame, test_size=0.2)
+        train, dev = train_test_split(train, test_size=0.25)
+
+        return Dataset(
+            name=dataset_name,
+            data=train,
+            target=train['target'],
+            data_dev=dev,
+            target_dev=dev['target'],
+            data_test=test,
+            target_test=test['target'],
+            target_name=data.frame.columns[-1],
+            target_categorical=True,
+            target_names=data.target_names.tolist(),
+            feature_names=data.feature_names.tolist(),
+            categorical_features={},
+        )
+
+
     path = os.path.join(root_path, dataset_name)
 
     # Load meta information
@@ -37,13 +60,14 @@ def load_csv_data(dataset_name, root_path='data', seed=0):
                        na_values=meta['na_values'])
 
     # Remove the target from the categorical features if necessary
-    if meta['target_categorical']:
+    if meta['target_categorical'] and meta['categorical_features']:
         meta['categorical_features'].pop(meta['target'])
 
     # Remove the target from feature name list
-    names.remove(meta['target'])
-
-    # Return the Bunch with the appropriate data chunked apart
+    if meta['target'] in names:
+        names.remove(meta['target'])
+    # print(train.shape, train.head())
+    # # Return the Bunch with the appropriate data chunked apart
     return Dataset(
         name=dataset_name,
         data=train[names],

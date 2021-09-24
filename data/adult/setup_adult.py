@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 """
-Setup the UCI Adult dataset for usage with MOSAIC.
+Setup the UCI Adult dataset for Astrapia usage.
 """
 import json
 import os
