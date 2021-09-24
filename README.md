@@ -23,7 +23,7 @@ TODO
 
 ## Use Case Example
 
-We show you how to use Astrapia to compare different explainers using the *UCI adult* dataset. First, navigate into `data/adult/` and run
+Currently, we offer two examples: *UCI adult* dataset and *UCI breast cancer* dataset. These examples can be found under `notebooks/AstrapiaComparatorDemo.ipynb` Here we show you how to use Astrapia to compare different explainers using the *UCI adult* dataset. First, navigate into `data/adult/` and run
 
     python setup_adult.py
 
@@ -80,12 +80,18 @@ To visualize metrics as tables or bar charts:
     print_metrics(metric_data, plot="bar", explainer='LIME')
 
 
-## Citation
-If you publish work that uses Astrapia, please cite Astrapia as follows:
+[comment]: <> (## Citation)
 
-    @article{astrapia2021XAI,
-      title={Astrapia: XAI Benchmark - Not only a tropical bird},
-      author={Mei Ling Fang, Dennis Hoebelt, Lennart Mischnaewski, Tim Jannik Rieber, Nadja Geisler},
-      journal={arXiv XXXXX},
-      year={2021}
-    }
+[comment]: <> (If you publish work that uses Astrapia, please cite Astrapia as follows:)
+
+[comment]: <> (    @article{astrapia2021XAI,)
+
+[comment]: <> (      title={Astrapia: XAI Benchmark - Not only a tropical bird},)
+
+[comment]: <> (      author={Mei Ling Fang, Dennis Hoebelt, Lennart Mischnaewski, Tim Jannik Rieber, Nadja Geisler},)
+
+[comment]: <> (      journal={arXiv XXXXX},)
+
+[comment]: <> (      year={2021})
+
+[comment]: <> (    })
