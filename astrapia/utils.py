@@ -28,13 +28,13 @@ def onehot_encode(data: pd.DataFrame, meta: xb.Dataset) -> any:
     :return: One-hot encoded DataFrame
     """
 
-    transformed_df = pd.DataFrame(index=data.index)
+    transformed_df = data[set(data.columns) - set(meta.categorical_features)]
 
-    for feature in set(data.columns) - set(meta.categorical_features):
-        transformed_df[feature] = data[feature]
+    new_dfs = []
 
     for feature in meta.categorical_features:
         for label in meta.categorical_features[feature]:
-            transformed_df[feature+'_'+str(label)] = (data[feature]==label).astype(int)
+            new_dfs.append(pd.DataFrame({feature+'_'+str(label): (data[feature]==label).astype(int)}))
 
-    return transformed_df
+    return pd.concat([transformed_df] + new_dfs, axis=1)
+
