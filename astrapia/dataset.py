@@ -3,8 +3,6 @@ import json
 import pandas as pd
 from sklearn.utils import Bunch
 from numpy.random import RandomState
-from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import train_test_split
 
 
 def load_csv_data(dataset_name, root_path='data', seed=0):
@@ -19,10 +17,18 @@ def load_csv_data(dataset_name, root_path='data', seed=0):
     :param root_path: path to the root data directory, defaults to 'data/'
     :return: data as an astrapia.Dataset
     """
+
+    path = os.path.join(root_path, dataset_name)
+
+    # Load meta information
+    with open(os.path.join(path, 'meta.json'), 'r') as infile:
+        meta = json.load(infile)
+
     if dataset_name == 'breast':
-        data = load_breast_cancer(as_frame=True)
-        train, test = train_test_split(data.frame, test_size=0.2)
-        train, dev = train_test_split(train, test_size=0.25)
+
+        train = pd.read_csv(os.path.join(path, 'train.csv'))
+        dev = pd.read_csv(os.path.join(path, 'dev.csv'))
+        test = pd.read_csv(os.path.join(path, 'test.csv'))
 
         return Dataset(
             name=dataset_name,
@@ -32,19 +38,12 @@ def load_csv_data(dataset_name, root_path='data', seed=0):
             target_dev=dev['target'].to_frame(),
             data_test=test,
             target_test=test['target'].to_frame(),
-            target_name=data.frame.columns[-1],
-            target_categorical=True,
-            target_names=data.target_names.tolist(),
-            feature_names=data.feature_names.tolist(),
-            categorical_features={},
+            target_name=meta['target_name'],
+            target_categorical=meta['target_categorical'],
+            target_names=meta['target_names'],
+            feature_names=meta['feature_names'],
+            categorical_features=meta['categorical_features'],
         )
-
-
-    path = os.path.join(root_path, dataset_name)
-
-    # Load meta information
-    with open(os.path.join(path, 'meta.json'), 'r') as infile:
-        meta = json.load(infile)
 
     names = meta['feature_names']  # just for convenience
 
@@ -66,7 +65,7 @@ def load_csv_data(dataset_name, root_path='data', seed=0):
     # Remove the target from feature name list
     if meta['target'] in names:
         names.remove(meta['target'])
-    # print(train.shape, train.head())
+
     # # Return the Bunch with the appropriate data chunked apart
     return Dataset(
         name=dataset_name,
