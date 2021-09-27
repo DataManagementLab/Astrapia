@@ -24,7 +24,7 @@ def load_csv_data(dataset_name, root_path='data', seed=0):
     with open(os.path.join(path, 'meta.json'), 'r') as infile:
         meta = json.load(infile)
 
-    if dataset_name == 'breast':
+    """if dataset_name == 'breast':
 
         train = pd.read_csv(os.path.join(path, 'train.csv'))
         dev = pd.read_csv(os.path.join(path, 'dev.csv'))
@@ -43,7 +43,7 @@ def load_csv_data(dataset_name, root_path='data', seed=0):
             target_names=meta['target_names'],
             feature_names=meta['feature_names'],
             categorical_features=meta['categorical_features'],
-        )
+        )"""
 
     names = meta['feature_names']  # just for convenience
 

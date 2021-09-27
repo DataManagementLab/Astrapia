@@ -11,23 +11,21 @@ from sklearn.model_selection import train_test_split
 
 if __name__ == '__main__':
     data = load_breast_cancer(as_frame=True)
+    data.frame['target'] = data.frame['target'].map(lambda x: data.target_names[x])
     train, test = train_test_split(data.frame, test_size=0.2)
-    train, dev = train_test_split(train, test_size=0.25)
 
-    train.to_csv('./train.csv')
-    test.to_csv('./test.csv')
-    dev.to_csv('./dev.csv')
+    train.to_csv('./breast.data', index=False, header=False)
+    test.to_csv('./breast.test', index=False, header=False)
 
     meta = {
-        'target_name': data.frame.columns[-1],
+        'target': 'target',
         'target_categorical':True,
         'target_names': data.target_names.tolist(),
-        'feature_names': data.feature_names.tolist(),
+        'feature_names': data.feature_names.tolist() + ['target'],
         'categorical_features': {
-            column: list(data.frame[column].unique())
-            for column in data.frame.columns
-            if data.frame[column].dtype == 'object'
-        }
+            'target': ['malignant', 'benign']
+        },
+        'na_values': '?'
     }
 
     with open('meta.json', 'w') as f:
