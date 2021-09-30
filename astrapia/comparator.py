@@ -1,7 +1,5 @@
 from collections import defaultdict
-
 import numpy as np
-
 from astrapia.samplers import base_sampler, random, splime
 import astrapia as xb
 from datetime import datetime
