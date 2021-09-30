@@ -104,7 +104,10 @@ class AnchorsExplainer(Explainer):
         Number of instances within the neighbourhood.
         """
         if hasattr(self, 'explanation'):
-            return self.get_fit_anchor(self.anchors_dataset['data']).shape[0]
+            try:
+                return self.get_fit_anchor(self.anchors_dataset['data']).shape[0]
+            except AttributeError:
+                return 0
 
     @xb.metric
     def accuracy(self):
@@ -120,6 +123,8 @@ class AnchorsExplainer(Explainer):
             if len(neighborhood) > 0:
                 ml_pred = self.predictor(neighborhood)
                 return np.count_nonzero(ml_pred == explanation_label) / len(neighborhood)
+            else:
+                return np.nan
 
     @xb.metric
     def accuracy_global(self):
@@ -195,8 +200,38 @@ class AnchorsExplainer(Explainer):
         :param dataset: provided dataset
         :return: indices as numpy array
         """
-        return np.where(np.all(dataset[:, self.explanation.features()] ==
-                               self.instance[self.explanation.features()], axis=1))[0]
+        indices_categorical = np.where(np.all(dataset[:, self.explanation.features()] ==
+                                              self.instance[self.explanation.features()], axis=1))[0]
+
+        if np.size(indices_categorical) > 0:
+            return indices_categorical
+
+        # derive neighborhood from the name of the explanation
+        try:
+            index_lists = []
+            for feature, name in zip(self.explanation.features(), self.explanation.names()):
+                if ">=" in name:
+                    index_lists.append(np.where(dataset[:, feature] >= float(name[name.index('>= ') + 3:])))
+                elif "<=" in name:
+                    index_lists.append(np.where(dataset[:, feature] >= float(name[name.index('<= ') + 3:])))
+                elif ">" in name:
+                    index_lists.append(np.where(dataset[:, feature] >= float(name[name.index('> ') + 2:])))
+                elif "<" in name:
+                    index_lists.append(np.where(dataset[:, feature] >= float(name[name.index('< ') + 2:])))
+                elif "=" in name:
+                    index_lists.append(np.where(dataset[:, feature] == name[name.index('" ') + 2:]))
+
+            # intersect different sublits of indices
+            indices_numerical = index_lists[0]
+            for i in range(1, len(index_lists)):
+                indices_numerical = np.intersect1d(indices_numerical, index_lists[i])
+
+            if np.size(indices_numerical) < np.size(indices_categorical):
+                return indices_categorical
+            else:
+                return indices_numerical
+        except:
+            return indices_categorical
 
     @xb.utility
     def get_explained_instance(self):
