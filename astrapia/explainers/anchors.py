@@ -213,11 +213,11 @@ class AnchorsExplainer(Explainer):
                 if ">=" in name:
                     index_lists.append(np.where(dataset[:, feature] >= float(name[name.index('>= ') + 3:])))
                 elif "<=" in name:
-                    index_lists.append(np.where(dataset[:, feature] >= float(name[name.index('<= ') + 3:])))
+                    index_lists.append(np.where(dataset[:, feature] <= float(name[name.index('<= ') + 3:])))
                 elif ">" in name:
-                    index_lists.append(np.where(dataset[:, feature] >= float(name[name.index('> ') + 2:])))
+                    index_lists.append(np.where(dataset[:, feature] > float(name[name.index('> ') + 2:])))
                 elif "<" in name:
-                    index_lists.append(np.where(dataset[:, feature] >= float(name[name.index('< ') + 2:])))
+                    index_lists.append(np.where(dataset[:, feature] < float(name[name.index('< ') + 2:])))
                 elif "=" in name:
                     index_lists.append(np.where(dataset[:, feature] == name[name.index('" ') + 2:]))
 
