@@ -1,4 +1,7 @@
 from collections import defaultdict
+
+import numpy as np
+
 from astrapia.samplers import base_sampler, random, splime
 import astrapia as xb
 from datetime import datetime
@@ -82,10 +85,8 @@ class ExplainerComparator:
 
                     explanation_metrics = {}
                     for (metric, value) in explainer.report(tag='metric', inferred_metrics=inferred_metrics):
-                        # add up metrics in order to compute average values later
-                        explainer_average_metrics[metric] += value
-                        # save metrics of the explanation separately
-                        explanation_metrics[metric] = value
+                        if not np.isnan(value):
+                            explanation_metrics[metric] = value
 
                     aggregated_explainer_metrics[str(index)] = explanation_metrics
                     aggregated_explanations[str(index)] = explanation
@@ -93,11 +94,21 @@ class ExplainerComparator:
                     # update progress bar
                     pbar.update(1)
 
-                # compute average metrics by dividing added metrics by the amount of provided instances
-                explainer_average_metrics = {metric: value / instances.shape[0]
-                                             for metric, value in explainer_average_metrics.items()}
+                # computing average metrics
+                all_explainers = [x.keys() for x in aggregated_explainer_metrics.values()]
+                relevant_metrics = list(set([item for sublist in all_explainers for item in sublist]))
+                expam = {}
+                for metric in relevant_metrics:
+                    aggregation = 0
+                    count = 0
+                    for metrics in aggregated_explainer_metrics.values():
+                        if metric in metrics.keys():
+                            count += 1
+                            aggregation += metrics[metric]
+                    if count > 0:
+                        expam[metric] = aggregation / count
 
-                self.averaged_metrics[name] = explainer_average_metrics
+                self.averaged_metrics[name] = expam
                 self.metrics[name] = aggregated_explainer_metrics
                 self.explanations[name] = aggregated_explanations
             self.timestamp = str(datetime.now())
@@ -162,3 +173,19 @@ class ExplainerComparator:
         """
         return {'timestamp': self.timestamp, 'explainers': list(self.explainers.keys()), 'properties': self.properties,
                 'averaged_metrics': self.averaged_metrics, 'separate_metrics': self.metrics}
+
+    def get_explanations(self):
+        """
+        Get explanations from comparator
+
+        :return: explanations as dict
+        """
+        return self.explanations
+
+    def get_explainers(self):
+        """
+        Get explainers from comparator
+
+        :return: explainers as dict
+        """
+        return self.explainers

@@ -107,6 +107,21 @@ class AnchorsExplainer(Explainer):
             return self.get_fit_anchor(self.anchors_dataset['data']).shape[0]
 
     @xb.metric
+    def accuracy(self):
+        """
+        Relative amount of data elements in explanation neighborhood or given dataset that have the same explanation
+        label as the label assigned by the ML model
+
+        :return: the accuracy value
+        """
+        if hasattr(self, 'explanation'):
+            explanation_label = self.explanation.exp_map["prediction"]
+            neighborhood = self.anchors_dataset['data'][self.get_fit_anchor(self.anchors_dataset['data'])]
+            if len(neighborhood) > 0:
+                ml_pred = self.predictor(neighborhood)
+                return np.count_nonzero(ml_pred == explanation_label) / len(neighborhood)
+
+    @xb.metric
     def accuracy_global(self):
         """
         The ML-accuracy of the explanation when applied to the whole dataset (not just the area of the explanation)
@@ -139,8 +154,11 @@ class AnchorsExplainer(Explainer):
         """
         if hasattr(self, 'explanation'):
             pred = self.predictor(self.anchors_dataset['data'])
-            self.p = pred
-            return np.mean(pred[self.get_fit_anchor(self.anchors_dataset['data'])])
+            neighborhood = pred[self.get_fit_anchor(self.anchors_dataset['data'])]
+            if neighborhood.size > 0:
+                return np.mean(neighborhood)
+            else:
+                return np.nan
 
     @xb.metric
     def balance_data(self):
@@ -150,7 +168,11 @@ class AnchorsExplainer(Explainer):
         :return: the balance value
         """
         if hasattr(self, 'explanation'):
-            return np.mean(self.anchors_dataset['labels'][self.get_fit_anchor(self.anchors_dataset['data'])])
+            neighborhood = self.anchors_dataset['labels'][self.get_fit_anchor(self.anchors_dataset['data'])]
+            if neighborhood.size > 0:
+                return np.mean(neighborhood)
+            else:
+                return np.nan
 
     @xb.metric
     def area_relative(self):
@@ -164,21 +186,6 @@ class AnchorsExplainer(Explainer):
             array = np.amax(self.anchors_dataset['data'], axis=0)[self.explanation.features()]
             array = array + 1
             return np.prod(1 / array)
-
-    @xb.metric
-    def accuracy(self):
-        """
-        Relative amount of data elements in explanation neighborhood or given dataset that have the same explanation
-        label as the label assigned by the ML model
-        
-        :return: the accuracy value
-        """
-        if hasattr(self, 'explanation'):
-            explanation_label = self.explanation.exp_map["prediction"]
-            relevant_examples = self.anchors_dataset['data'][self.get_fit_anchor(self.anchors_dataset['data'])]
-            if len(relevant_examples) > 0:
-                ml_pred = self.predictor(relevant_examples)
-                return np.count_nonzero(ml_pred == explanation_label) / len(relevant_examples)
 
     @xb.utility
     def get_fit_anchor(self, dataset):
