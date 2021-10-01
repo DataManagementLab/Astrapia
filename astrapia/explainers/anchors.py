@@ -219,7 +219,7 @@ class AnchorsExplainer(Explainer):
                 elif "<" in name:
                     index_lists.append(np.where(dataset[:, feature] < float(name[name.index('< ') + 2:])))
                 elif "=" in name:
-                    index_lists.append(np.where(dataset[:, feature] == name[name.index('" ') + 2:]))
+                    index_lists.append(np.where(dataset[:, feature] == name[name.index('= ') + 2:]))
 
             # intersect different sublits of indices
             indices_numerical = index_lists[0]
