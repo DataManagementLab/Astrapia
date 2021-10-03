@@ -12,16 +12,16 @@ comparing local model-agnostic post-hoc explainers. The design of Astrapia is ba
 
 Start by cloning the repository and move to the project folder.
 
-    git clone https://github.com/DataManagementLab/lab21-XAI-benchmark.git && cd lab21-XAI-benchmark
+    git clone git@github.com:DataManagementLab/Astrapia.git && cd Astrapia
     
-Run the following command to install necessary dependencies. A symbolic link will be built to *xaibenchmark* allowing you to change the source code without re-installation.
+Run the following command to install necessary dependencies. A symbolic link will be built to *astrapia* allowing you to change the source code without re-installation.
 
     pip install -r requirements.txt
 
 ## Documentation
-TODO
+Astrapia provides an extensive documentation at [astrapia.readthedocs.io](https://astrapia.readthedocs.io/en/latest/).
 
-## Use Case Example
+## Quickstart
 
 Currently, we offer two examples: *UCI adult* dataset and *UCI breast cancer* dataset. These examples can be found under `notebooks/AstrapiaComparatorDemo.ipynb` Here we show you how to use Astrapia to compare different explainers using the *UCI adult* dataset. First, navigate into `data/adult/` and run
 
@@ -33,10 +33,10 @@ Files for the datasets will be generated under the corresponding folder. Now loa
 
 Import the dependencies
 
-    import xaibenchmark as xb
-    from xaibenchmark import explainers, dataset
-    from xaibenchmark.comparator import ExplainerComparator
-    from xaibenchmark.visualize_metrics import print_metrics, load_metrics_from_json
+    import astrapia as xb
+    from astrapia import explainers, dataset
+    from astrapia.comparator import ExplainerComparator
+    from astrapia.visualize_metrics import print_metrics, load_metrics_from_json
     import sklearn.ensemble
 
 Then, train a machine learning classifier that you want to explain.
@@ -78,20 +78,3 @@ To visualize metrics as tables or bar charts:
     # show single explainer result
     print_metrics(metric_data, explainer='ANCHORS 0.9')
     print_metrics(metric_data, plot="bar", explainer='LIME')
-
-
-[comment]: <> (## Citation)
-
-[comment]: <> (If you publish work that uses Astrapia, please cite Astrapia as follows:)
-
-[comment]: <> (    @article{astrapia2021XAI,)
-
-[comment]: <> (      title={Astrapia: XAI Benchmark - Not only a tropical bird},)
-
-[comment]: <> (      author={Mei Ling Fang, Dennis Hoebelt, Lennart Mischnaewski, Tim Jannik Rieber, Nadja Geisler},)
-
-[comment]: <> (      journal={arXiv XXXXX},)
-
-[comment]: <> (      year={2021})
-
-[comment]: <> (    })
