@@ -54,10 +54,9 @@ class SPLimeSampler(Sampler):
 
             return data.categorical_features[f_name][f_idx]
 
-        # Combine the samples chosen by submodular pick 
-        samples_df = pd.DataFrame(columns=data.data.columns)
-        for exp in sp_obj.sp_explanations:
-            series = pd.Series([process_feature(name, value) for name, value in zip(exp.domain_mapper.feature_names, exp.domain_mapper.feature_values)], index=data.data.columns)
-            samples_df = samples_df.append(series, ignore_index=True)
-
+        # Combine the samples chosen by submodular pick
+        samples_df = pd.DataFrame(([process_feature(name, value) for name, value in
+                                    zip(exp.domain_mapper.feature_names,
+                                        exp.domain_mapper.feature_values)] for exp in
+                                   sp_obj.sp_explanations), columns=data.data.columns)
         return samples_df

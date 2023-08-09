@@ -28,7 +28,7 @@ def onehot_encode(data: pd.DataFrame, meta: xb.Dataset) -> any:
     :return: One-hot encoded DataFrame
     """
 
-    transformed_df = data[set(data.columns) - set(meta.categorical_features)]
+    transformed_df = data[list(set(data.columns) - set(meta.categorical_features))]
 
     new_dfs = []
 
