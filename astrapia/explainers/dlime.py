@@ -87,15 +87,12 @@ class DLimeExplainer(Explainer):
         self.instance = self.transform_dataset(instance, self.data).iloc[0]
 
         p_label = self.clabel[self.indices[0]]
-        N = self.clustered_data[self.clustered_data[:, 30] == p_label]
-        subset = np.delete(N, 30, axis=1)
 
         self.explanation = self.explainer.explain_instance_hclust(self.instance,
                                                                  lambda x: self.predict(self.inverse_transform_dataset(
                                                                      pd.DataFrame(x, columns=self.train.keys()), self.data)),
                                                                  num_features=num_features,
                                                                  model_regressor=LinearRegression(),
-                                                                 clustered_data=subset,
                                                                  regressor='linear',
                                                                  labels=(0, 1))
         self.weighted_instances = self.get_weighted_instances()
