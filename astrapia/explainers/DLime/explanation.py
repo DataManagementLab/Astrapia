@@ -1,5 +1,5 @@
 # ==============================================================================
-# We modified the code from Zafar's DLIME implementation publised on github
+# We modified the code from Zafar's DLIME implementation published on github
 #
 # MIT License
 #
@@ -25,6 +25,7 @@
 # ==============================================================================
 
 import string
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -69,8 +70,8 @@ class Explanation(object):
             self.dummy_label = 1
         else:
             raise InvalidExplanationMode('Invalid explanation mode "{}". '
-                            'Should be either "classification" '
-                            'or "regression".'.format(mode))
+                                         'Should be either "classification" '
+                                         'or "regression".'.format(mode))
 
     def available_labels(self):
         try:
@@ -119,7 +120,7 @@ class Explanation(object):
         plt.title(title)
         return fig, names
 
-    def as_pyplot_to_figure(self, type='h', name = None, label='0', lp=None, **kwargs):
+    def as_pyplot_to_figure(self, type='h', name=None, label='0', lp=None, **kwargs):
         if label == '0':
             exp = self.as_list_zero(label=0, **kwargs)
         else:
@@ -129,7 +130,7 @@ class Explanation(object):
         vals.reverse()
         names.reverse()
         colors = ['green' if x > 0 else 'red' for x in vals]
-        #pos = np.arange(len(exp)) + .2
+        # pos = np.arange(len(exp)) + .2
         pos = np.arange(len(exp)) / 3
 
         fig = plt.figure(figsize=(4, 2))

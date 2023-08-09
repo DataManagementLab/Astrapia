@@ -10,7 +10,8 @@ def basic_information(bunch):
     total_count = train_count + dev_count + test_count
     print("The dataset consists of", total_count, "elements.")
     print("It was split into train (", train_count, " examples), dev (", dev_count, " examples) "
-          "and test (", test_count, " examples) sets.", sep='')
+                                                                                    "and test (", test_count,
+          " examples) sets.", sep='')
     print("The target attribute of the data is", bunch.target_name, "and its possible values are",
           ", ".join(bunch.target_names), ".")
     print("The dataset consists of", len(bunch.feature_names), "features.\nThese are", ", ".join(bunch.feature_names))
@@ -49,7 +50,7 @@ def feature_information(bunch, feature, dataset="train"):
             category_dic[category] = fraction
         category_dic = dict(sorted(category_dic.items(), key=lambda item: item[1], reverse=True))
         for k, v in category_dic.items():
-            print(f'{str(v)+"%":6} of the elements in the given dataset have the category {k}')
+            print(f'{str(v) + "%":6} of the elements in the given dataset have the category {k}')
 
     # for numerical features, present their minimum, maximum and mean value in the given dataset
     else:

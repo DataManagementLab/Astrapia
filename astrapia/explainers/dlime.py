@@ -1,11 +1,12 @@
 import numpy as np
-from astrapia.explainer import Explainer
-from astrapia.explainers.DLime.explainer_tabular import LimeTabularExplainer as DLimeTabularExplainer
-import astrapia as xb
-from sklearn.neighbors import NearestNeighbors
+import pandas as pd
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.linear_model import LinearRegression
-import pandas as pd
+from sklearn.neighbors import NearestNeighbors
+
+import astrapia as xb
+from astrapia.explainer import Explainer
+from astrapia.explainers.DLime.explainer_tabular import LimeTabularExplainer as DLimeTabularExplainer
 
 
 class DLimeExplainer(Explainer):
@@ -16,7 +17,7 @@ class DLimeExplainer(Explainer):
     def __init__(self, data, predict_fn, discretize_continuous=True):
         """
         Initializes a DLime explainer
-        
+
         :param data: data that is supposed to be explained
         :param predict_fn: classification model that is supposed to be explained
         :param discretize_continuous: should continuous values be separated into discrete categories
@@ -276,4 +277,3 @@ class DLimeExplainer(Explainer):
         :return: instance
         """
         return self.instance
-

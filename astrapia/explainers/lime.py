@@ -1,9 +1,10 @@
-import numpy as np
-from astrapia import Explainer
-import astrapia as xb
-import pandas as pd
 import lime
 import lime.lime_tabular
+import numpy as np
+import pandas as pd
+
+import astrapia as xb
+from astrapia import Explainer
 
 
 class LimeExplainer(Explainer):
@@ -29,7 +30,8 @@ class LimeExplainer(Explainer):
         self.test = self.transform_dataset(data.data_test, data)
 
         self.explainer = lime.lime_tabular.LimeTabularExplainer(self.train, feature_names=self.train.keys(),
-                                                                class_names=data.target_names, categorical_features=None,
+                                                                class_names=data.target_names,
+                                                                categorical_features=None,
                                                                 discretize_continuous=discretize_continuous)
 
         self.predict = predict_fn
@@ -56,10 +58,10 @@ class LimeExplainer(Explainer):
         """
         df = pd.DataFrame(index=data.index)
         for feature in meta.categorical_features:
-
-            max_indices = np.argmax(data[[feature+'_'+str(l) for l in meta.categorical_features[feature]]].to_numpy(), axis=1)
+            max_indices = np.argmax(
+                data[[feature + '_' + str(l) for l in meta.categorical_features[feature]]].to_numpy(), axis=1)
             df[feature] = pd.Series([meta.categorical_features[feature][f] for f in max_indices], index=data.index)
-            
+
         continuous = list(meta.feature_names - meta.categorical_features.keys())
         df[continuous] = data[continuous]
         return df[meta.data.keys()]
@@ -161,8 +163,8 @@ class LimeExplainer(Explainer):
         """
 
         ml_preds = self.predict(self.inverse_transform_dataset(self.train, self.data))
-        ml_preds = ml_preds[:,1] > 0.5
-        exp_preds = [self.predict_instance_surrogate(instance) for instance,_ in self.weighted_instances]
+        ml_preds = ml_preds[:, 1] > 0.5
+        exp_preds = [self.predict_instance_surrogate(instance) for instance, _ in self.weighted_instances]
         exp_preds = np.array(exp_preds) > 0.5
         weights = np.array([weight for _, weight in self.weighted_instances])
         return ((ml_preds == exp_preds) * weights).sum() / sum(weights)
@@ -175,10 +177,9 @@ class LimeExplainer(Explainer):
 
         :return: the balance value
         """
-        
-        if hasattr(self, 'explanation'):
 
-            exp_preds = [self.predict_instance_surrogate(instance) for instance,_ in self.weighted_instances]
+        if hasattr(self, 'explanation'):
+            exp_preds = [self.predict_instance_surrogate(instance) for instance, _ in self.weighted_instances]
             exp_preds = np.array(exp_preds) > 0.5
 
             weights = np.array([weight for _, weight in self.weighted_instances])
@@ -194,8 +195,8 @@ class LimeExplainer(Explainer):
         """
         if hasattr(self, 'explanation'):
             ml_preds = self.predict(self.inverse_transform_dataset(self.train, self.data))
-            ml_preds = ml_preds[:,1] > 0.5
-            
+            ml_preds = ml_preds[:, 1] > 0.5
+
             weights = np.array([weight for _, weight in self.weighted_instances])
             return (ml_preds * weights).sum() / sum(weights)
 
@@ -207,9 +208,9 @@ class LimeExplainer(Explainer):
         :return: the balance value
         """
         if hasattr(self, 'explanation'):
-
             weights = np.array([weight for _, weight in self.weighted_instances])
-            return sum((self.data.target.to_numpy().reshape((-1,)) == self.data.target_names[1]) * weights) / sum(weights)
+            return sum((self.data.target.to_numpy().reshape((-1,)) == self.data.target_names[1]) * weights) / sum(
+                weights)
 
     @xb.metric
     def accuracy_global(self):
@@ -220,8 +221,8 @@ class LimeExplainer(Explainer):
         :return: the accuracy value
         """
         ml_preds = self.predict(self.inverse_transform_dataset(self.train, self.data))
-        ml_preds = ml_preds[:,1] > 0.5
-        exp_preds = [self.predict_instance_surrogate(instance) for instance,_ in self.weighted_instances]
+        ml_preds = ml_preds[:, 1] > 0.5
+        exp_preds = [self.predict_instance_surrogate(instance) for instance, _ in self.weighted_instances]
         exp_preds = np.array(exp_preds) > 0.5
         return (ml_preds == exp_preds).sum() / len(ml_preds)
 
@@ -261,5 +262,3 @@ class LimeExplainer(Explainer):
         :return: instance
         """
         return self.instance
-
-

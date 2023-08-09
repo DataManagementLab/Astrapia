@@ -1,10 +1,11 @@
 import astrapia as xb
 
+
 class Sampler:
     """
     The Sampler class provides a simple interface for sampling representative instances. This class should not be used as-is but rather extended.
     """
-    
+
     def sample(self, data: xb.Dataset, count: int, *args, **kwargs):
         """
         Sample n elements from data.

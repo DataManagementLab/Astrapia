@@ -1,5 +1,6 @@
 import json
 import textwrap
+
 import plotly.graph_objects as go
 
 
@@ -43,7 +44,7 @@ def normalize(dicts, relevant_metrics):
                         res[name][metric + '*'] = 1
                 else:
                     for name, value in current_values:
-                        res[name][metric+'*'] = (value - min_val) / (max_val - min_val)
+                        res[name][metric + '*'] = (value - min_val) / (max_val - min_val)
 
         else:
             for name in dicts.keys():
@@ -190,7 +191,8 @@ def print_metrics(data, explainer=None, index=None, plot='table', show_metric_wi
                                     y=[value for _, value in normalized_pair],
                                     text=[round(value, 3) for _, value in normalized_pair],
                                     textposition='outside')])
-            fig.update_layout(title_text=header, plot_bgcolor='#fffaf4', height=600, margin=dict(l=20, r=20, t=60, b=200))
+            fig.update_layout(title_text=header, plot_bgcolor='#fffaf4', height=600,
+                              margin=dict(l=20, r=20, t=60, b=200))
             annotation = textwrap.wrap("Non-relative metrics are not shown here because they cannot be compared with "
                                        "relative values in the same plot. Balance-related metrics were rescaled to "
                                        "display how close they are to 0.5, because that is the optimal balance value.")

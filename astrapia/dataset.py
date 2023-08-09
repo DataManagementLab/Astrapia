@@ -1,8 +1,9 @@
-import os
 import json
+import os
+
 import pandas as pd
-from sklearn.utils import Bunch
 from numpy.random import RandomState
+from sklearn.utils import Bunch
 
 
 def load_csv_data(dataset_name, root_path='data', seed=0):
@@ -85,23 +86,23 @@ def load_csv_data(dataset_name, root_path='data', seed=0):
 
 class Dataset(Bunch):
 
-    def __init__(self, 
-        data: pd.DataFrame,
-        feature_names: list,
-        categorical_features: dict,
-        
-        target: pd.DataFrame,
-        target_names: list,
-        target_name: str,
+    def __init__(self,
+                 data: pd.DataFrame,
+                 feature_names: list,
+                 categorical_features: dict,
 
-        target_categorical: bool = True,
+                 target: pd.DataFrame,
+                 target_names: list,
+                 target_name: str,
 
-        name: str = None,
-        data_dev: pd.DataFrame = None,
-        target_dev: pd.DataFrame = None,
-        data_test: pd.DataFrame = None,
-        target_test: pd.DataFrame = None,
-        ) -> None:
+                 target_categorical: bool = True,
+
+                 name: str = None,
+                 data_dev: pd.DataFrame = None,
+                 target_dev: pd.DataFrame = None,
+                 data_test: pd.DataFrame = None,
+                 target_test: pd.DataFrame = None,
+                 ) -> None:
         """
         :param data: training data as pandas DataFrame
         :param feature_names: list of feature names

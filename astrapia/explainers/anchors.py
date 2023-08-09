@@ -1,8 +1,9 @@
 import numpy as np
-from anchor import anchor_tabular
-from astrapia import Explainer
-import astrapia as xb
 import pandas as pd
+from anchor import anchor_tabular
+
+import astrapia as xb
+from astrapia import Explainer
 
 
 class AnchorsExplainer(Explainer):
@@ -28,9 +29,10 @@ class AnchorsExplainer(Explainer):
             self.anchors_dataset['data'],
             self.anchors_dataset['categorical_names'])
         self.meta = data
-        
+
         def transformed_predict(data):
-            return predict_fn(self.inverse_transform_dataset({'data': data}, self.meta))[:,1] > 0.5
+            return predict_fn(self.inverse_transform_dataset({'data': data}, self.meta))[:, 1] > 0.5
+
         self.predictor = transformed_predict
 
     def transform_dataset(self, data: pd.DataFrame, meta: xb.Dataset) -> any:
@@ -46,7 +48,7 @@ class AnchorsExplainer(Explainer):
             'feature_names': meta.feature_names,
             'data': data.to_numpy()
         }
-        
+
         for feature_idx in result['categorical_features']:
             feature_map = {feature: idx for idx, feature in enumerate(result['categorical_names'][feature_idx])}
             result['data'][:, feature_idx] = np.vectorize(lambda x: feature_map[str(x)])(result['data'][:, feature_idx])
@@ -55,7 +57,8 @@ class AnchorsExplainer(Explainer):
 
     def inverse_transform_dataset(self, data: any, meta: xb.Dataset) -> pd.DataFrame:
         df = pd.DataFrame(data['data'], columns=meta.feature_names)
-        for feature_idx in [i for i, label in (enumerate(meta.data.keys())) if label in meta.categorical_features.keys()]:
+        for feature_idx in [i for i, label in (enumerate(meta.data.keys())) if
+                            label in meta.categorical_features.keys()]:
             df[meta.feature_names[feature_idx]] = df[meta.feature_names[feature_idx]].map(
                 lambda entry: meta.categorical_features[meta.feature_names[feature_idx]][entry])
         return df
@@ -72,7 +75,8 @@ class AnchorsExplainer(Explainer):
 
         instance = self.transform_dataset(instance, self.meta)
 
-        self.explanation = self.explainer.explain_instance(instance['data'][0], self.predictor, threshold=self.min_precision)
+        self.explanation = self.explainer.explain_instance(instance['data'][0], self.predictor,
+                                                           threshold=self.min_precision)
         self.instance = instance['data'][0]
         return self.explanation
 
@@ -169,7 +173,7 @@ class AnchorsExplainer(Explainer):
     def balance_data(self):
         """
         Relative amount of data elements in the neighborhood of the explanation with a label value of 1
-        
+
         :return: the balance value
         """
         if hasattr(self, 'explanation'):
@@ -184,7 +188,7 @@ class AnchorsExplainer(Explainer):
         """
         Relative amount of feature space over all features n that is specified by the explanation.
         area = Product[i=1->n] fi, f: 1 if feature is not in explanation, else 1/m, m: deminsionality of feature
-        
+
         :return: the area value
         """
         if hasattr(self, 'explanation'):

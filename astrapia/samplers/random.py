@@ -1,6 +1,8 @@
-from astrapia.samplers.base_sampler import Sampler
-import astrapia as xb
 import random
+
+import astrapia as xb
+from astrapia.samplers.base_sampler import Sampler
+
 
 class RandomSampler(Sampler):
 

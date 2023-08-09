@@ -1,13 +1,15 @@
 def metric(fn):
     """Decorator for tagging metrics.
-    
+
     Metrics can be used to compare different explainers.
     """
+
     def wrapper(*args):
         result = fn(*args)
         if result is None:
             return float('nan')
         return result
+
     wrapper.tag = 'metric'
     return wrapper
 
@@ -15,14 +17,16 @@ def metric(fn):
 def utility(fn):
     """Decorator for tagging utility functions.
 
-    Utility functions can be used to infer different metrics automatically.   
+    Utility functions can be used to infer different metrics automatically.
     """
+
     # mark the method as something that can be used to infer metrics
     def wrapper(*args):
         result = fn(*args)
         if result is None:
             return float('nan')
         return result
+
     wrapper.tag = 'utility'
     return wrapper
 
@@ -30,13 +34,15 @@ def utility(fn):
 def prop(fn):
     """Decorator for tagging explainer properties.
 
-    Explainer property to describe the properties of a explainers.   
+    Explainer property to describe the properties of a explainers.
     """
+
     # mark the method as something that can be used to infer metrics
     def wrapper(*args):
         result = fn(*args)
         if result is None:
             return float('nan')
         return result
+
     wrapper.tag = 'prop'
     return wrapper

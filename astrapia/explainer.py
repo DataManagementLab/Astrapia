@@ -1,15 +1,15 @@
-from __future__ import print_function
-import astrapia as xb
 import pandas as pd
+
+import astrapia as xb
 
 
 class Explainer:
     """
-    The Explainer class wraps an explainer and provides a unified interface for it. 
-    Initialization depends on the specific explainer. 
+    The Explainer class wraps an explainer and provides a unified interface for it.
+    Initialization depends on the specific explainer.
     This class should *not* be used as is but rather extended.
     """
-    
+
     def __init__(self):
         """
         Extend this class and override this method to define your explainer
@@ -22,7 +22,7 @@ class Explainer:
 
         :param data: the dataset to transform
         :param meta: Dataset object containing metadata
-        :return: the transformed dataset            
+        :return: the transformed dataset
         """
         return data.copy()
 
@@ -38,13 +38,13 @@ class Explainer:
 
     def explain_instance(self, instance: pd.DataFrame):
         """
-        Used to generate an explanation of a single instance. 
+        Used to generate an explanation of a single instance.
         Should be overriden in every subclass of Explainer.
 
         :param instance: the instance to be explained
         """
         raise NotImplementedError
-        
+
     def metrics(self) -> list:
         """
         Returns a list of metrics that are available for this explainer
@@ -60,7 +60,7 @@ class Explainer:
         :return: a list of property references
         """
         return [x for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'prop']
-    
+
     def infer_metrics(self, printing: bool = True) -> None:
         """
         Infer missing metrics for this explainer.
@@ -72,8 +72,9 @@ class Explainer:
         """
         xb.transfer.use_transfer(self)
         if printing:
-            print('inferred metrics:', {x for x in dir(self) if getattr(getattr(self, x), 'tag', None) in ['metric', 'utility']})
-        
+            print('inferred metrics:',
+                  {x for x in dir(self) if getattr(getattr(self, x), 'tag', None) in ['metric', 'utility']})
+
     def report(self, tag=None, inferred_metrics=True) -> dict:
         """
         Compute metrics and properties for this explainer.
@@ -87,13 +88,16 @@ class Explainer:
             self.infer_metrics()
 
         if tag is None:
-            all_mu_identifier_references = {(x, getattr(self, x)) for x in dir(self) if getattr(getattr(self, x), 'tag', None) in ['metric', 'prop']}
+            all_mu_identifier_references = {(x, getattr(self, x)) for x in dir(self) if
+                                            getattr(getattr(self, x), 'tag', None) in ['metric', 'prop']}
         elif tag == 'metric':
-            all_mu_identifier_references = {(x, getattr(self, x)) for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'metric'}
+            all_mu_identifier_references = {(x, getattr(self, x)) for x in dir(self) if
+                                            getattr(getattr(self, x), 'tag', None) == 'metric'}
         elif tag == 'prop':
-            all_mu_identifier_references = {(x, getattr(self, x)) for x in dir(self) if getattr(getattr(self, x), 'tag', None) == 'prop'}
+            all_mu_identifier_references = {(x, getattr(self, x)) for x in dir(self) if
+                                            getattr(getattr(self, x), 'tag', None) == 'prop'}
         else:
             raise ValueError(f'Tag should be either "metric" or "prop", not ${tag}')
-            
+
         implemented_mu_values = {(x, f()) for (x, f) in all_mu_identifier_references}
         return implemented_mu_values

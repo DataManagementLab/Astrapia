@@ -1,8 +1,9 @@
 import inspect
-import astrapia as ast
 from functools import partial
 
-_transferlist = [] # global variable keeping track of loaded transfer functions
+import astrapia as ast
+
+_transferlist = []  # global variable keeping track of loaded transfer functions
 
 
 def add_transfer(f):
@@ -11,8 +12,9 @@ def add_transfer(f):
 
     :param f: The transfer function to add.
     """
-    params = list(inspect.signature(f).parameters) # use inspect to get the parameters of the function
-    _transferlist.append((params, f.__name__, lambda obj:f(*[getattr(obj, req) for req in params]))) # add transfer function with dependencies
+    params = list(inspect.signature(f).parameters)  # use inspect to get the parameters of the function
+    _transferlist.append((params, f.__name__, lambda obj: f(
+        *[getattr(obj, req) for req in params])))  # add transfer function with dependencies
 
 
 def use_transfer(obj):
@@ -29,6 +31,6 @@ def use_transfer(obj):
         for transition in _transferlist:
             if set(transition[0]) <= new_mu_identifiers and transition[1] not in new_mu_identifiers:
                 setattr(obj, transition[1], ast.metric(partial(transition[2], obj)))
-                
+
         old_mu_identifiers = new_mu_identifiers
         new_mu_identifiers = {x for x in dir(obj) if getattr(getattr(obj, x), 'tag', None) == 'metric'}

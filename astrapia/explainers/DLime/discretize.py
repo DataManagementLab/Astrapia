@@ -1,5 +1,5 @@
 # ==============================================================================
-# We modified the code from Zafar's DLIME implementation publised on github
+# We modified the code from Zafar's DLIME implementation published on github
 #
 # MIT License
 #
@@ -24,11 +24,12 @@
 # SOFTWARE.
 # ==============================================================================
 
+from abc import ABCMeta, abstractmethod
+
 import numpy as np
 import sklearn
 import sklearn.tree
 from sklearn.utils import check_random_state
-from abc import ABCMeta, abstractmethod
 
 
 class BaseDiscretizer():
@@ -36,7 +37,7 @@ class BaseDiscretizer():
 
     def __init__(self, data, categorical_features, feature_names, labels=None, random_state=None):
         self.to_discretize = ([x for x in range(data.shape[1])
-                              if x not in categorical_features])
+                               if x not in categorical_features])
         self.names = {}
         self.lambdas = {}
         self.means = {}
@@ -98,6 +99,7 @@ class BaseDiscretizer():
             def get_inverse(q):
                 return max(mins[q],
                            min(self.random_state.normal(means[q], stds[q]), maxs[q]))
+
             if len(data.shape) == 1:
                 q = int(ret[feature])
                 ret[feature] = get_inverse(q)
@@ -109,7 +111,6 @@ class BaseDiscretizer():
 
 class QuartileDiscretizer(BaseDiscretizer):
     def __init__(self, data, categorical_features, feature_names, labels=None, random_state=None):
-
         BaseDiscretizer.__init__(self, data, categorical_features,
                                  feature_names, labels=labels,
                                  random_state=random_state)
@@ -139,7 +140,7 @@ class DecileDiscretizer(BaseDiscretizer):
 
 class EntropyDiscretizer(BaseDiscretizer):
     def __init__(self, data, categorical_features, feature_names, labels=None, random_state=None):
-        if(labels is None):
+        if (labels is None):
             raise ValueError('Labels must be not None when using \
                              EntropyDiscretizer')
         BaseDiscretizer.__init__(self, data, categorical_features,

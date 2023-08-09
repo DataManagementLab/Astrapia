@@ -9,11 +9,11 @@ def model_properties(y_test, modelpredictions, labels=[]):
 
     :return: dictionary with attributes
     """
-    
-    if len(y_test) != len(modelpredictions) :
+
+    if len(y_test) != len(modelpredictions):
         print("The length of the labels array needs to be the same length as the prediction array")
         return
-    if not labels: 
+    if not labels:
         return metrics.classification_report(y_test, modelpredictions, output_dict=True)
     else:
         return metrics.classification_report(y_test, modelpredictions, labels=labels, output_dict=True)
@@ -34,7 +34,6 @@ def onehot_encode(data: pd.DataFrame, meta: xb.Dataset) -> any:
 
     for feature in meta.categorical_features:
         for label in meta.categorical_features[feature]:
-            new_dfs.append(pd.DataFrame({feature+'_'+str(label): (data[feature]==label).astype(int)}))
+            new_dfs.append(pd.DataFrame({feature + '_' + str(label): (data[feature] == label).astype(int)}))
 
     return pd.concat([transformed_df] + new_dfs, axis=1)
-

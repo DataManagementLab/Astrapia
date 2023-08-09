@@ -1,11 +1,13 @@
-from collections import defaultdict
-import numpy as np
-from astrapia.samplers import base_sampler, random, splime
-import astrapia as xb
-from datetime import datetime
 import json
-from tqdm import tqdm
+from collections import defaultdict
+from datetime import datetime
+
+import numpy as np
 import pandas as pd
+from tqdm import tqdm
+
+import astrapia as xb
+from astrapia.samplers import base_sampler, random, splime
 
 
 class ExplainerComparator:
