@@ -10,3 +10,4 @@ plotly==5.15.0
 boruta==0.3
 numpy==1.25.2
 requests==2.31.0
+sphinx-rtd-theme
